@@ -1,152 +1,172 @@
-# Model Price Explorer — Plan de projet
+# Model Price Explorer — Spécification fonctionnelle
 
-Date de rédaction : 23 septembre 2026.
+Date de rédaction : 23 septembre 2026. Mise à jour : 29 septembre 2026.
 
-Projet d'équipe de software engineering. Ce document propose le périmètre et l'organisation de la réalisation ; aucune implémentation n'est engagée.
+## 1. Objectif
 
-## 1. Objectif et utilisateurs
+Application web qui aide à choisir une API de modèle de langage en croisant trois dimensions : **le prix, la performance et la tâche à accomplir**.
 
-Créer une application web permettant de rechercher des modèles de langage, de comparer leurs offres API et d'estimer leur coût pour un même scénario d'utilisation.
+Questions auxquelles l'application répond :
 
-**Question à laquelle l'application répond :** « Pour mon volume de requêtes et mes contraintes techniques, quelles offres correspondent à mon besoin et combien coûteraient-elles ? »
+- « Pour mes tâches et mon budget, quelles offres me donnent la meilleure qualité ? »
+- « Pour mes tâches et un niveau de qualité minimal, quelles offres me coûtent le moins cher ? »
+- « Comment ces offres se situent-elles les unes par rapport aux autres en prix, qualité, latence et débit ? »
 
-Public cible : étudiants, développeurs et petites équipes qui doivent choisir une API pour un projet.
+Public cible : étudiants, développeurs et petites équipes qui choisissent une API pour un projet.
 
-La valeur du projet repose sur un parcours complet : filtrer selon ses contraintes, sélectionner quelques offres, puis les comparer avec ses propres volumes de tokens. Le prix seul ne constitue pas une mesure de qualité du modèle.
+L'application agrège des métadonnées publiques (prix, benchmarks, mesures de latence et de débit) et effectue des calculs. Elle n'exécute aucun modèle et ne demande aucune clé d'API aux utilisateurs. Le prix et la performance sont toujours présentés ensemble : aucun des deux ne suffit seul.
 
-L'application consulte des métadonnées et effectue des calculs classiques. Elle n'exécute aucun modèle et ne nécessite aucune clé d'inférence des utilisateurs.
+**Stack :** Nuxt, TypeScript, Tailwind CSS, SQLite, Zod, Vitest, Playwright.
 
-## 2. Contraintes connues et décisions proposées
+## 2. Concepts du domaine
 
-| Sujet | Décision ou état |
+| Concept | Définition |
 | --- | --- |
-| Projet choisi | Idée 2 : Model Price Explorer |
-| Objectif de complexité | Application utile, accessible à construire en équipe |
-| Langage imposé | Aucun |
-| Stack proposée | Nuxt, TypeScript, Tailwind CSS, SQLite |
-| Source initiale | Models.dev |
-| Périmètre de calcul | Requêtes textuelles, facturation standard par token, USD |
-| Taille de l'équipe | 3 personnes |
-| Échéance et disponibilité | Non communiquées ; planning organisé par jalons |
-| Livrables obligatoires du cours | Non communiqués ; liste indicative en section 14 |
+| **Fournisseur** | Entreprise qui expose une API facturée (OpenAI, Anthropic, Groq…) |
+| **Modèle** | Un ensemble de poids. Modèles propriétaires : l'alias publié par l'éditeur. Modèles open source : la version exacte |
+| **Offre** | Un modèle servi par un fournisseur, avec son prix et ses limites. Unité de base du catalogue |
+| **Qualité** | Score d'un modèle sur un benchmark (jeu de questions et notation fixes) ou dans un classement par votes humains (Elo) |
+| **Latence** | Temps avant le premier token de réponse, en millisecondes |
+| **Débit** | Tokens générés par seconde |
+| **Catégorie de tâche** | Famille de travail associée à un ou plusieurs benchmarks (section 9) |
+| **Charge de travail** | Besoin mensuel : une ou plusieurs catégories, chacune avec sa part du volume et ses tailles moyennes |
+| **Scénario** | Charge de travail + objectif + contraintes, soumis au moteur d'optimisation |
 
-La stack est une proposition adaptée aux préférences connues de Noé. Les trois rôles proposés ci-dessous sont à attribuer aux membres de l'équipe ; les dates dépendent de l'échéance et des consignes du cours.
+### Rattachement des données
 
-## 3. Périmètre du MVP
-
-### Fonctionnalités indispensables — P0
-
-| Fonctionnalité | Comportement attendu | Critère d'acceptation |
+| Donnée | Rattachée à | Raison |
 | --- | --- | --- |
-| Catalogue | Liste des offres : nom, fournisseur, prix d'entrée/sortie, contexte et capacités | Au moins 20 offres textuelles de 3 fournisseurs dans le jeu de recette, avec provenance visible |
-| Recherche et filtres | Recherche par nom ; fournisseur, contexte minimal, tool calling et prix maximal d'entrée | Les filtres se combinent et l'absence de résultat est expliquée |
-| Tri et pagination | Tri par prix d'entrée, prix de sortie ou contexte ; 25 résultats par page | Les valeurs inconnues restent en fin de liste et le tri est stable |
-| Fiche d'offre | Détails, limites, source, fournisseur et date de collecte | Une offre est identifiable sans ambiguïté, même si plusieurs fournisseurs servent un modèle similaire |
-| Comparateur | Sélection de 2 à 4 offres et affichage des mêmes caractéristiques | Ajout, retrait et limite de sélection fonctionnent ; une valeur absente est signalée |
-| Calculateur | Estimation pour un volume mensuel et des tokens moyens par requête | Les offres compatibles sont comparées sur les mêmes hypothèses ; les autres indiquent la raison de l'exclusion |
-| Synchronisation | Collecte et stockage du catalogue côté serveur | Une panne de la source conserve la dernière version valide, avec sa date |
-| Interface responsive | Utilisation sur ordinateur et mobile | Recherche, comparaison et calcul restent utilisables à 360 px de largeur |
+| Score de benchmark | **Modèle** | Mêmes poids, mêmes réponses, quel que soit le fournisseur |
+| Prix, limites, capacités | **Offre** | Fixés par chaque fournisseur |
+| Latence, débit | **Modèle** | Seule mesure disponible dans les sources retenues : médiane par modèle |
 
-Le nombre d'offres est un objectif de recette, pas un chiffre garanti par la source. Le premier jalon doit confirmer la couverture disponible.
+La latence et le débit dépendent en réalité de l'infrastructure de chaque fournisseur. L'interface les présente comme « Médiane mesurée par Artificial Analysis, peut varier selon le fournisseur ».
 
-### Améliorations après le MVP — P1
+Pour un alias propriétaire, un score mesuré sur une version antérieure reste utilisé, avec la mention « Score d'une version antérieure » et un niveau de confiance réduit.
 
-- Favoris enregistrés dans le navigateur, sans compte.
-- Scénarios de consommation sauvegardés localement.
-- URL partageable contenant la sélection et les paramètres du calcul.
-- Graphique simple montrant la part entrée/sortie du coût.
-- Export CSV du comparatif et de ses hypothèses.
+## 3. Fonctionnalités
 
-### Extensions ultérieures — P2
+### P0 — Cœur de l'application
 
-- Calcul tenant compte du cache et de certains paliers de contexte.
-- Historique des prix collectés et détection de changements.
-- Deuxième source de données, avec provenance explicite par offre.
+| Fonctionnalité | Comportement | Critère d'acceptation |
+| --- | --- | --- |
+| Catalogue | Liste des offres : nom, fournisseur, prix d'entrée/sortie, contexte, capacités, score de la catégorie active, latence, débit | Au moins 20 offres de 3 fournisseurs ; provenance visible pour chaque donnée |
+| Recherche et filtres | Nom ; fournisseur, contexte minimal, tool calling, prix maximal, score minimal, latence maximale | Les filtres se combinent ; l'absence de résultat est expliquée |
+| Tri et pagination | Tri par prix, contexte, score, latence ou débit ; 25 résultats par page | Valeurs inconnues en fin de liste ; tri stable |
+| Fiche d'offre | Prix, limites, capacités, scores par benchmark et par catégorie, latence, débit, sources et dates | Offre identifiable sans ambiguïté ; chaque valeur affiche sa source et sa date |
+| Nouveaux modèles | Modèles sortis sur une période récente, triés par date de sortie, avec leurs benchmarks s'ils sont disponibles | Période réglable ; modèle non évalué signalé « Pas encore évalué » |
+| Comparateur | 1 à 4 offres comparées par catégorie : tableau des caractéristiques et des scores par catégorie, graphique prix × qualité pour la catégorie choisie | Valeurs absentes signalées ; axes avec unité et catégorie |
+| Calculateur de coût | Coût mensuel pour un volume et des tailles moyennes | Contrat de la section 6 |
+| Répartition de l'usage | Curseurs en % sur des catégories en langage courant, profils prédéfinis, tailles moyennes par catégorie | Total de 100 % contrôlé ; aucun nom de benchmark exposé dans le formulaire |
+| Optimiseur | Mode qualité (budget maximal) ou mode coût (qualité minimale), nombre maximal de modèles à utiliser (1 à 3), contraintes secondaires | Recommandations justifiées ; nombre de modèles respecté ; offres exclues avec leur raison |
+| Synchronisation multi-sources | Import, validation et stockage des prix et des performances | Une source en panne garde sa dernière version valide sans bloquer les autres |
+| Rapprochement des sources | Relie les identifiants de chaque source aux modèles du catalogue | Aucune fusion silencieuse ; correspondances traçables |
+| Interface responsive | Ordinateur et mobile | Tous les parcours utilisables à 360 px |
 
-Le MVP exclut les comptes utilisateurs, paiements, appels de génération, benchmarks exécutés par l'équipe, recommandations par IA, conversion de devises et facturation image/audio/vidéo. MCP Explorer et AI Status Monitor restent deux autres idées de projet ; leur intégration n'est pas nécessaire à ce livrable.
+### P1 — Améliorations
+
+- Saisie libre d'une requête qui pré-remplit la catégorie par mots-clés, toujours modifiable.
+- Comptage des tokens à partir d'un texte collé, à la place des tailles moyennes déclarées.
+- Mise en évidence des offres non dominées sur le graphique prix × qualité.
+- Favoris et scénarios enregistrés dans le navigateur.
+- URL partageable contenant la sélection, la charge et les paramètres.
+- Export CSV du comparatif et de la recommandation avec ses hypothèses.
+
+### Hors périmètre
+
+Comptes utilisateurs, paiements, appels de génération, benchmarks exécutés par l'application, conversion de devises, facturation image/audio/vidéo, calcul avec cache ou paliers de contexte, historique des prix et des scores, alertes de prix.
 
 ## 4. Parcours et écrans
 
-### Parcours principal
+### Parcours optimisation
 
-1. L'utilisateur ouvre le catalogue et choisit ses contraintes : fournisseur, contexte ou capacité.
+1. L'utilisateur répartit son usage en pourcentages entre des catégories formulées en langage courant (section 9), à partir de zéro ou d'un profil prédéfini.
+2. Il saisit son volume mensuel total de requêtes.
+3. Il choisit le nombre maximal de modèles qu'il accepte d'utiliser : 1, 2 ou 3 (offres distinctes, section 8).
+4. Il choisit l'objectif : « Meilleure qualité pour un budget de X USD/mois » ou « Coût minimal pour une qualité d'au moins Y », le seuil Y s'appliquant à chaque catégorie de sa répartition.
+5. Il ajoute des contraintes : contexte minimal, tool calling, latence maximale, débit minimal, fournisseurs autorisés.
+6. Il obtient les meilleures combinaisons classées : les modèles retenus, le modèle à utiliser pour chaque catégorie, le coût total et par catégorie, la qualité obtenue, le niveau de confiance.
+7. Il envoie une combinaison au comparateur.
+
+### Parcours exploration
+
+1. L'utilisateur filtre le catalogue depuis l'accueil, ou parcourt les nouveaux modèles.
 2. Il sélectionne jusqu'à quatre offres.
-3. Il ouvre le comparateur et vérifie les différences techniques.
-4. Il saisit un volume mensuel, une taille moyenne d'entrée et une taille moyenne de sortie facturée.
-5. Il consulte le coût estimé de chaque offre compatible et suit le lien du fournisseur pour vérifier ses conditions.
+3. Il les compare par catégorie, en tableau et sur le graphique prix × qualité.
+4. Il saisit un volume et lit le coût estimé de chaque offre.
 
 ### Écrans
 
-| Route proposée | Contenu |
-| --- | --- |
-| `/` | Catalogue, recherche, filtres, pagination et sélection persistante pendant la navigation |
-| `/offers/[id]` | Fiche de l'offre et bouton d'ajout au comparateur |
-| `/compare` | Tableau comparatif et formulaire du scénario de coût |
-| `/about` | Méthode de calcul, provenance des données et limites du périmètre |
+| Route | Page | Contenu |
+| --- | --- | --- |
+| `/` | Accueil | Présentation courte et accès direct à l'optimiseur, puis catalogue : sélecteur de catégorie active, recherche, filtres, tri, pagination, barre de sélection |
+| `/new` | Nouveaux modèles | Modèles sortis sur les 30, 90 (par défaut) ou 180 derniers jours, du plus récent au plus ancien ; benchmarks et scores par catégorie s'ils existent, sinon « Pas encore évalué » ; offres disponibles avec lien vers leur fiche, la moins chère en premier |
+| `/compare` | Comparer | Sélecteur de catégorie, tableau comparatif, graphique prix × qualité sur fond de marché, formulaire de coût (section 10) |
+| `/optimize` | Optimiser | Répartition de l'usage en %, nombre maximal de modèles (1 à 3), objectif, contraintes, recommandations, graphique prix × qualité des offres recommandées |
+| `/about` | Méthodes | Méthodes de calcul du coût, des scores et de l'optimisation ; sources, attributions et limites |
+| `/offers/[id]` | Fiche d'offre | Hors menu, ouverte depuis n'importe quelle liste : prix, limites, scores, sources et bouton d'ajout au comparateur |
 
-Sur ordinateur, privilégier un tableau lisible et une barre indiquant les offres sélectionnées. Sur mobile, utiliser des cartes pour le catalogue et un tableau comparatif avec défilement horizontal contenu dans sa zone.
+Sur ordinateur : tableaux et barre de sélection. Sur mobile : cartes pour le catalogue et les recommandations, tableau comparatif à défilement horizontal contenu.
 
-Prévoir les états chargement, catalogue vide, erreur, source périmée et offre retirée. Les prix doivent toujours porter leur unité. Les champs ont un libellé, les actions sont utilisables au clavier et les différences ne reposent pas uniquement sur la couleur.
+États gérés : chargement, catalogue vide, erreur, source périmée, offre retirée, score indisponible, aucune combinaison possible. Prix et scores portent toujours leur unité ou leur échelle. Champs libellés, actions accessibles au clavier, différences jamais signalées par la seule couleur.
 
-L'état de sélection doit être partagé entre les pages. Les favoris et scénarios P1 peuvent utiliser un stockage navigateur versionné, lu uniquement côté client pour respecter le rendu serveur.
+La sélection et le scénario courant sont partagés entre les pages. Les données P1 stockées dans le navigateur sont versionnées et lues uniquement côté client.
 
-## 5. Source de données et règles de normalisation
+## 5. Sources de données
 
-### Source principale
+| Source | Données | Rattachement |
+| --- | --- | --- |
+| [Models.dev](https://models.dev/api.json) | Prix en USD par million de tokens, contexte, limites, capacités (`tool_call`, `reasoning`, `open_weights`), modalités | Offre |
+| [Artificial Analysis](https://artificialanalysis.ai/api-reference) (`/api/v2/data/llms/models`) | Indices intelligence, code et maths ; MMLU-Pro, GPQA, HLE, LiveCodeBench, SciCode, MATH-500, AIME ; latence et débit médians | Modèle |
+| [LMArena](https://huggingface.co/datasets/lmarena-ai/leaderboard-dataset) (sous-ensemble `text`, split `latest`) | Scores Elo par catégorie issus de votes humains à l'aveugle (overall, coding, math, et autres catégories présentes dans le jeu) | Modèle |
 
-Models.dev publie un catalogue JSON regroupant des fournisseurs et leurs offres : [API du catalogue](https://models.dev/api.json). Son [README](https://github.com/anomalyco/models.dev#api) décrit l'accès aux données et exprime les tarifs d'entrée/sortie en USD par million de tokens.
+Contraintes d'accès :
 
-Le projet maintient aussi un [schéma des données](https://github.com/anomalyco/models.dev/blob/dev/packages/core/src/schema.ts), qui prévoit notamment des prix absents et des paliers tarifaires. Il faudra enregistrer un échantillon daté lors du premier jalon pour vérifier la forme réelle du JSON consommé.
+- Artificial Analysis : clé d'API de l'application, stockée côté serveur dans une variable d'environnement ; 1 000 requêtes par jour ; attribution obligatoire vers artificialanalysis.ai, affichée dans le pied de page et sur `/about`.
+- LMArena : identifiant `model_name` à rapprocher ; les catégories réellement présentes sont lues à l'import, et seules celles déclarées en section 9 sont exploitées.
+- Models.dev : le catalogue contient aussi des modèles d'image et de vidéo ; seuls les modèles dont la sortie contient `text` sont importés. Une limite égale à `0` est traitée comme inconnue.
 
-Ce catalogue est communautaire. Une collecte récente ne garantit pas que chaque prix a été vérifié récemment auprès de son fournisseur. Afficher séparément la date de collecte et la date de mise à jour fournie par la source lorsqu'elle existe.
+Chaque source est optionnelle sauf Models.dev : sans prix, l'application affiche une indisponibilité explicite ; sans performances, le catalogue et le calculateur restent utilisables et l'optimiseur est désactivé avec une explication. L'accès programmatique, la licence et l'attribution de chaque source sont vérifiés avant intégration ; une source inaccessible est remplacée par une autre publiant des scores comparables.
 
-### Unité de comparaison
+**Pas de recouvrement :** Artificial Analysis et LMArena ne publient aucun benchmark commun ; chaque score a donc une seule source, et aucune règle d'arbitrage n'est nécessaire.
 
-Une ligne représente **une offre d'un modèle chez un fournisseur**.
+### Rapprochement
 
-- Clé métier : couple `provider_id` + `model_id`.
-- Identifiant local stable et utilisable dans une URL : `offer_id`.
-- Deux modèles portant un nom proche ne sont jamais fusionnés automatiquement.
-- Les abonnements à des applications ne sont pas assimilés à des offres API facturées au token.
-- Commencer avec une liste explicite de trois fournisseurs d'API, sélectionnés lors du contrôle initial de la source.
+Les sources nomment les modèles différemment (`gpt-4o-2024-08-06`, `GPT-4o`, `openai/gpt-4o`).
 
-### Données absentes et cas particuliers
+1. Une table de correspondances versionnée dans le dépôt relie `(source, identifiant externe)` à un modèle du catalogue.
+2. Une normalisation (casse, séparateurs, préfixe fournisseur, suffixe de date) propose des correspondances candidates lors de chaque import.
+3. Une correspondance candidate n'est appliquée qu'après ajout dans la table ; elle figure dans le rapport d'import.
+4. Un identifiant non rapproché est conservé et signalé.
 
-- Une donnée absente devient `null` ; l'interface affiche « Non renseigné ».
-- Une capacité peut être oui, non ou inconnue. Inconnue ne signifie pas non.
-- Un prix nul reste distinct d'un prix absent. Afficher « 0 USD déclaré » sans promettre une utilisation gratuite illimitée.
-- Un tarif n'est calculable que si sa base de facturation est compatible avec le scénario standard décrit en section 6.
-- Une offre avec paliers, supplément séparé de raisonnement ou conditions tarifaires non interprétées conserve sa fiche, mais son estimation est marquée « Non prise en charge ».
-- Une offre disparue d'un import complet valide reste identifiable comme « Absente du dernier catalogue ». Cela ne prouve pas que son API est en panne.
-- Une entrée signalée comme obsolète par la source est masquée du catalogue par défaut et reste consultable depuis une ancienne sélection.
+### Normalisation
 
-### Synchronisation proposée
+- Clé métier d'une offre : `provider_id` + `model_id`. Identifiant local stable pour les URL : `offer_id`.
+- Deux modèles de noms proches ne sont jamais fusionnés automatiquement.
+- Donnée absente : `null`, affichée « Non renseigné ».
+- Capacité : oui, non ou inconnue. Inconnue ne signifie pas non.
+- Prix nul distinct de prix absent : affiché « 0 USD déclaré ».
+- Offre avec paliers, supplément de raisonnement séparé ou conditions non interprétées : fiche conservée, estimation « Non prise en charge ».
+- Offre disparue d'un import complet valide : « Absente du dernier catalogue ».
+- Entrée obsolète selon la source : masquée par défaut, consultable depuis une sélection existante.
 
-1. Importer le catalogue au premier lancement, puis vérifier sa fraîcheur au démarrage.
-2. Sur le serveur Node permanent, vérifier périodiquement si le dernier import réussi date de plus de 24 heures.
-3. Télécharger le JSON depuis l'URL fixe de Models.dev, avec délai maximal et taille de réponse bornés.
-4. Valider l'enveloppe, les identifiants et les champs utilisés. Ignorer les nouveaux champs non exploités.
-5. Normaliser les offres du périmètre ; vérifier l'unicité des clés et les prix non négatifs.
-6. Publier le nouvel état dans une transaction SQLite, après validation complète du périmètre importé.
-7. En cas d'erreur, garder la dernière version valide, enregistrer l'échec et réessayer plus tard. Un verrou empêche deux imports simultanés.
+### Limites affichées
 
-Si le dernier succès dépasse 48 heures, afficher « Données potentiellement anciennes ». Une requête utilisateur lit la base locale ; elle ne relance pas le téléchargement du catalogue entier.
+Source, benchmark et date accompagnent chaque score. La page `/about` explique qu'un score peut être surestimé par contamination (questions vues à l'entraînement) et qu'il mesure un test précis, pas la tâche réelle de l'utilisateur.
 
-Sans aucun catalogue valide, l'application présente une indisponibilité explicite. Un jeu de démonstration daté peut être activé pour une soutenance, avec la mention visible « Données de démonstration ».
-
-## 6. Calculateur : contrat métier
+## 6. Calculateur de coût
 
 ### Saisies
 
 | Paramètre | Sens |
 | --- | --- |
 | `requests_per_month` | Nombre de requêtes sur un mois |
-| `input_tokens_per_request` | Moyenne de tous les tokens envoyés : instructions, historique et message |
-| `output_tokens_per_request` | Moyenne des tokens de sortie facturés, pas seulement des mots visibles |
+| `input_tokens_per_request` | Moyenne des tokens envoyés : instructions, historique, message |
+| `output_tokens_per_request` | Moyenne des tokens de sortie facturés, raisonnement inclus s'il est facturé au tarif de sortie |
 
-Les nombres saisis sont des entiers positifs ou nuls, avec bornes explicites. Pour le MVP : au maximum 100 millions de requêtes mensuelles et 10 millions de tokens par requête, puis application des limites plus restrictives propres à chaque offre.
+Entiers positifs ou nuls, au plus 100 millions de requêtes mensuelles et 10 millions de tokens par requête, puis limites propres à chaque offre.
 
-### Formule du scénario standard
+### Formule
 
 ```text
 coût par requête =
@@ -156,212 +176,260 @@ coût par requête =
 coût mensuel = coût par requête × nombre de requêtes mensuelles
 ```
 
-Exemple pédagogique avec des prix fictifs : 2 USD par million en entrée et 8 USD par million en sortie. Pour 1 000 tokens d'entrée, 500 tokens de sortie et 10 000 requêtes mensuelles : entrée = 20 USD, sortie = 40 USD, total = **60 USD/mois**.
+Exemple fictif : 2 USD/M en entrée, 8 USD/M en sortie, 1 000 tokens d'entrée, 500 de sortie, 10 000 requêtes : entrée 20 USD + sortie 40 USD = **60 USD/mois**.
 
-### Règles de fiabilité
+### Règles
 
-- Calculer uniquement les offres avec les deux prix renseignés et une tarification standard prise en charge.
-- Utiliser une arithmétique décimale pour les montants ; arrondir uniquement à l'affichage final.
-- Vérifier les limites d'entrée, de sortie et de contexte connues par requête. Si une limite connue est dépassée, indiquer l'incompatibilité et l'exclure du classement.
-- Si une limite nécessaire est inconnue, préciser « Compatibilité à vérifier » ; ne pas attribuer de badge « Offre compatible la moins chère ».
-- Les volumes sont des hypothèses moyennes. Leur conformité ne garantit pas que toutes les requêtes réelles rentreront dans le contexte.
-- Les coûts de cache, outils, requêtes fixes, taxes, remises, batch et médias ne sont pas inclus. Une offre exigeant un supplément non modélisé ne reçoit pas de total présenté comme complet.
-- Les tokens de raisonnement facturés au même tarif que la sortie doivent être compris dans la saisie de sortie. Une facturation séparée du raisonnement reste hors calcul MVP.
-- Les offres à tarif nul sont présentées à part tant que leurs conditions n'ont pas été vérifiées ; elles ne gagnent pas automatiquement le classement.
-- Afficher la décomposition entrée/sortie, la devise, les hypothèses et la date des données à côté du résultat.
+- Calcul uniquement si les deux prix sont renseignés et la tarification standard prise en charge.
+- Arithmétique décimale ; arrondi à l'affichage seulement.
+- Limite d'entrée, de sortie ou de contexte connue et dépassée : offre exclue avec sa raison.
+- Limite inconnue : « Compatibilité à vérifier », jamais de badge « la moins chère ».
+- Cache, outils, frais fixes, taxes, remises, batch et médias non inclus.
+- Tokens de raisonnement : aucun multiplicateur n'est appliqué. Une info-bulle sur le champ de sortie explique que les modèles marqués `reasoning` génèrent des tokens de réflexion invisibles mais facturés, à inclure dans la saisie ; ces offres portent un badge « Modèle de raisonnement : coût de sortie possiblement sous-estimé ».
+- Offres à tarif nul présentées à part tant que leurs conditions ne sont pas vérifiées.
+- Résultat affiché avec décomposition entrée/sortie, devise, hypothèses et date des données, sous le libellé « Coût estimé pour ce scénario ».
 
-Le libellé du résultat est « Coût estimé pour ce scénario ». Aucun score global de qualité n'est déduit des prix.
+## 7. Score de qualité par catégorie
 
-## 7. Architecture et stack proposées
+1. **Normalisation par benchmark :** chaque score brut est ramené sur [0, 100]. Pourcentages de réussite et indices Artificial Analysis : valeur conservée, multipliée par 100 si la source l'exprime entre 0 et 1. Scores Elo : probabilité de victoire en duel contre le modèle médian du classement, `100 / (1 + 10^((elo_médian − elo) / 400))`. Un modèle moyen vaut environ 50, et 100 points d'Elo d'avance correspondent à environ 64.
+2. **Agrégation par catégorie :** moyenne pondérée des benchmarks disponibles de la catégorie (poids de la section 9).
+3. **Couverture :** part du poids total effectivement disponible.
 
-| Couche | Choix | Raison |
-| --- | --- | --- |
-| Interface et serveur | Nuxt avec TypeScript | Une application et un langage partagés par l'équipe |
-| Styles | Tailwind CSS | Interface responsive et composants visuellement cohérents |
-| API interne | Routes serveur Nuxt | Contrat stable entre le catalogue externe et l'interface |
-| Stockage | SQLite, accès SQL limité à un module | Catalogue persistant sans service de base de données séparé |
-| Validation | Zod | Vérifier les données importées et les paramètres de l'API |
-| Calcul | Module TypeScript pur avec arithmétique décimale | Calcul testable et réutilisable sans dépendre de l'interface |
-| Tests | Vitest et quelques parcours Playwright | Vérifier les règles métier et le parcours utilisateur complet |
-| Exécution | Serveur Node unique avec disque persistant | Adapté au stockage SQLite et à la collecte périodique |
+| Couverture | Traitement |
+| --- | --- |
+| ≥ 50 % | Score utilisé ; « Score partiel » affiché si < 100 % |
+| < 50 % | Score non fiable : offre traitée comme sans score |
 
-La documentation Nuxt consultée via Context7 confirme l'usage de ses routes API avec une récupération compatible SSR via `useFetch`. Références : [serveur Nuxt](https://nuxt.com/docs/4.x/guide/directory-structure/server) et [récupération de données](https://nuxt.com/docs/4.x/getting-started/data-fetching).
+### Niveau de confiance
+
+| Niveau | Condition |
+| --- | --- |
+| Élevé | Couverture complète, version mesurée identique à la version servie |
+| Moyen | Couverture partielle ou score d'une version antérieure |
+| Faible | Catégorie sans benchmark spécifique : score général utilisé (section 9) |
+
+## 8. Moteur d'optimisation
+
+Un module TypeScript pur, déterministe, sans dépendance à l'interface ni à la base. Un seul moteur, deux modes.
+
+### Entrées
+
+| Entrée | Contenu |
+| --- | --- |
+| Charge de travail | Liste de `(catégorie, part du volume, tokens d'entrée, tokens de sortie)` et volume mensuel total |
+| Objectif | `maximize_quality` avec budget mensuel maximal, ou `minimize_cost` avec qualité minimale par catégorie |
+| Nombre maximal de modèles | `K` entre 1 et 3 : nombre d'offres distinctes (modèle + fournisseur) que la combinaison peut utiliser |
+| Contraintes secondaires | Contexte minimal, tool calling, latence maximale, débit minimal, fournisseurs autorisés ou exclus |
+| Offres sans score | Exclues des recommandations par défaut ; option « Inclure les offres non évaluées », qui les affiche dans une liste séparée, hors classement |
+
+### Formulation
+
+Pour chaque catégorie `c`, choisir une offre `o` parmi les candidates, en utilisant au plus `K` offres distinctes au total. Coût `cost(c, o)` selon la section 6 avec le volume de `c` ; qualité `q(c, o)` selon la section 7.
+
+- **Mode qualité :** maximiser `Σ part(c) × q(c, o_c)` sous `Σ cost(c, o_c) ≤ budget`.
+- **Mode coût :** minimiser `Σ cost(c, o_c)` sous `q(c, o_c) ≥ qualité minimale` pour chaque `c`.
+
+Les deux résolutions ci-dessous s'appliquent à un ensemble d'offres donné ; la contrainte `K` est traitée ensuite en les appliquant à chaque groupe d'offres.
+
+Le mode coût se résout catégorie par catégorie : filtrage, puis offre la moins chère. Le mode qualité est un sac à dos à choix multiples, résolu exactement par fusion de fronts de Pareto :
+
+1. Pour chaque catégorie, filtrer les candidates selon les contraintes et retirer les offres dominées (plus chères et de qualité inférieure ou égale).
+2. Partir du front de la première catégorie : ensemble de couples `(coût, qualité pondérée)`.
+3. Pour chaque catégorie suivante, combiner chaque point du front courant avec chaque candidate, écarter les combinaisons au-dessus du budget, puis ne garder que les points non dominés.
+4. Le front final contient toutes les combinaisons optimales ; les meilleures sous le budget sont retournées.
+
+L'élagage par dominance maintient le front petit pour les tailles visées (jusqu'à 8 catégories, quelques centaines d'offres).
+
+### Contrainte du nombre de modèles
+
+La fusion de fronts ne sait pas compter les offres distinctes. La contrainte `K` est traitée en amont, par énumération des groupes d'offres :
+
+1. **Réduction du vivier :** une offre A domine une offre B si, pour toutes les catégories de la charge, A est au moins aussi bonne et au plus aussi chère. Les offres dominées sont retirées : remplacer B par A ne dégrade jamais une combinaison et n'augmente pas le nombre d'offres. Si le vivier dépasse 20 offres, les 20 meilleures en qualité pondérée sont conservées, et la réponse le signale.
+2. **Énumération :** tous les groupes de 1 à `K` offres du vivier sont testés. Avec 20 offres et `K = 3`, cela représente 1 350 groupes au plus.
+3. **Résolution par groupe :** dans chaque groupe, chaque catégorie ne peut choisir que parmi les offres du groupe. Mode coût : l'offre la moins chère du groupe qui atteint la qualité minimale. Mode qualité : fusion de fronts de Pareto restreinte au groupe.
+4. **Classement :** les meilleures combinaisons de tous les groupes sont fusionnées puis départagées selon les règles ci-dessous.
+
+Avec `K = 1`, chaque offre est évaluée seule sur toute la répartition.
+
+### Départage des égalités
+
+Mode qualité : qualité décroissante, puis coût croissant. Mode coût : coût croissant, puis qualité décroissante. Ensuite, dans les deux modes : confiance décroissante, moins d'offres distinctes, puis `offer_id` croissant.
+
+### Sortie
+
+- Les 5 meilleures combinaisons : offres retenues, offre à utiliser pour chaque catégorie, coût total et par catégorie, qualité par catégorie et pondérée, confiance.
+- Pour chaque offre exclue : la contrainte qui l'a écartée.
+- Aucune combinaison possible : contrainte la plus bloquante et écart à combler (budget minimal nécessaire ou qualité maximale atteignable).
+- Hypothèses et dates des données utilisées.
+
+Une offre non calculable n'est jamais recommandée.
+
+## 9. Catégories de tâches
+
+Les catégories décrivent ce que l'utilisateur fait au quotidien, pas des benchmarks. L'utilisateur ne voit que le libellé et les exemples ; la correspondance avec les benchmarks reste interne et est détaillée sur `/about`.
+
+| Catégorie affichée | Exemples montrés à l'utilisateur | Benchmarks utilisés (interne) | Poids |
+| --- | --- | --- | --- |
+| Écrire et corriger du code | Générer une fonction, corriger un bug, relire une PR | LiveCodeBench, SciCode, indice code AA, LMArena coding | 0,3 / 0,2 / 0,3 / 0,2 |
+| Résoudre des problèmes de maths | Exercices, calculs, démonstrations | AIME, MATH-500, indice maths AA, LMArena math | 0,3 / 0,2 / 0,3 / 0,2 |
+| Analyser et raisonner | Questions d'expert, comparer des options, aide à la décision | GPQA, MMLU-Pro, HLE | 0,4 / 0,4 / 0,2 |
+| Rédiger des textes | Mails, articles, posts, textes créatifs | Score général* | — |
+| Résumer et reformuler | Résumer un document, simplifier un texte, prendre des notes | Score général* | — |
+| Extraire des informations | Remplir un tableau depuis un texte, sortir du JSON, classer des messages | Score général* | — |
+| Traduire | Traduire un texte, écrire dans une autre langue | Score général* | — |
+| Discuter (chatbot, support) | Assistant conversationnel, réponses à des clients | Score général* | — |
+
+\* **Score général** : LMArena overall (0,6) et indice intelligence AA (0,4). Ces catégories n'ont pas de benchmark spécifique dans les sources retenues ; leur score est affiché avec la mention « Score général, pas spécifique à cette tâche » et un niveau de confiance faible. Si une catégorie LMArena correspondante est présente à l'import (par exemple une catégorie d'écriture créative ou multilingue), elle remplace le score général pour cette tâche.
+
+Les poids d'une catégorie sont renormalisés sur les benchmarks présents pour chaque modèle.
+
+### Répartition de l'usage
+
+L'utilisateur décrit son usage en pourcentages, par exemple 30 % de code, 20 % de rédaction, 50 % de discussion :
+
+- Chaque catégorie a un curseur de 0 à 100 % et un champ numérique équivalent ; seules les catégories au-dessus de 0 % entrent dans la charge.
+- Le total est affiché en permanence ; l'envoi est bloqué tant qu'il ne vaut pas 100 %, avec un bouton « Ajuster à 100 % » qui redimensionne proportionnellement les parts, que le total soit inférieur ou supérieur.
+- Des profils prédéfinis servent de point de départ et restent modifiables après application.
+- Des tailles moyennes d'entrée et de sortie sont proposées par catégorie et restent modifiables.
+
+### Profils prédéfinis
+
+| Profil | Répartition |
+| --- | --- |
+| Assistant de code | Code 70 %, Analyser 15 %, Discuter 15 % |
+| Création de contenu | Rédiger 50 %, Résumer 20 %, Traduire 15 %, Discuter 15 % |
+| Support client | Discuter 60 %, Extraire 20 %, Résumer 10 %, Traduire 10 % |
+| Usage polyvalent | Discuter 30 %, Rédiger 20 %, Code 15 %, Résumer 15 %, Analyser 10 %, Traduire 10 % |
+
+### Tailles moyennes par défaut
+
+Ordres de grandeur indicatifs, affichés comme tels dans le formulaire.
+
+| Catégorie | Tokens d'entrée | Tokens de sortie | Raison |
+| --- | --- | --- | --- |
+| Code | 2 000 | 800 | Contexte de fichiers envoyé, code généré |
+| Maths | 500 | 1 000 | Énoncé court, résolution détaillée |
+| Analyser | 1 500 | 800 | Question et documents d'appui |
+| Rédiger | 300 | 800 | Consigne courte, texte long |
+| Résumer | 4 000 | 400 | Document long, sortie courte |
+| Extraire | 2 000 | 300 | Texte source, sortie structurée courte |
+| Traduire | 800 | 900 | Sortie proche de l'entrée |
+| Discuter | 1 000 | 300 | Historique de conversation, réponses brèves |
+
+## 10. Comparaison prix × performance
+
+### Page `/compare`
+
+Ordre de la page, de haut en bas :
+
+1. **Sélecteur de catégorie** : détermine la catégorie mise en avant dans le tableau et l'axe de qualité du graphique.
+2. **Tableau comparatif** : une colonne par offre sélectionnée (1 à 4 ; avec une seule offre, le graphique la situe face au marché). Lignes : prix d'entrée et de sortie, contexte, limites, capacités, score de chaque catégorie avec son niveau de confiance, latence, débit, sources et dates. La meilleure valeur connue de chaque ligne est mise en évidence par un marqueur textuel, pas seulement par la couleur.
+3. **Graphique prix × qualité** : composant décrit ci-dessous.
+4. **Formulaire de coût** : volume mensuel et tailles moyennes ; coût mensuel de chaque offre selon la section 6.
+
+Sur mobile, le tableau défile horizontalement dans sa zone et le graphique passe sous le tableau.
+
+### Composant graphique prix × qualité
+
+Un seul composant, réutilisé sur `/compare` et sous les résultats de `/optimize`.
+
+- **Axe horizontal :** coût mensuel estimé du scénario courant (sur `/optimize`, coût si l'offre traitait seule toute la répartition) ; à défaut, prix mixte par million de tokens `(3 × prix d'entrée + prix de sortie) / 4`, formule affichée dans la légende.
+- **Axe vertical :** score de la catégorie active, sur 0–100.
+- **Points mis en évidence :** offres sélectionnées (`/compare`) ou recommandées (`/optimize`), en couleur et étiquetées avec leur nom et leur fournisseur.
+- **Contexte :** toutes les autres offres calculables du catalogue, en gris clair, sans étiquette ; leur nom apparaît au survol et au focus clavier.
+- **Confiance :** la forme du point indique le niveau de confiance du score.
+- **Offres sans score :** listées sous le graphique.
+- Le changement de catégorie met à jour l'axe vertical, sa légende et la position des points.
+
+## 11. Synchronisation
+
+Chaque source a son importeur, indépendant des autres.
+
+1. Import au premier lancement, vérification de fraîcheur au démarrage.
+2. Vérification périodique : prix toutes les 24 h, performances toutes les 7 jours.
+3. Téléchargement depuis une URL fixe, délai maximal et taille de réponse bornés.
+4. Validation Zod de l'enveloppe et des champs utilisés ; champs inconnus ignorés.
+5. Normalisation puis rapprochement (section 5).
+6. Publication dans une transaction SQLite après validation complète de la source.
+7. Erreur : dernière version valide conservée, échec enregistré, nouvel essai plus tard. Un verrou par source empêche deux imports simultanés.
+
+Dernier succès plus ancien que deux périodes : « Données potentiellement anciennes » sur les valeurs concernées. Les requêtes utilisateur lisent uniquement la base locale. Un mode démonstration charge des échantillons datés, avec la mention visible « Données de démonstration ».
+
+## 12. Architecture
 
 ```mermaid
 flowchart LR
-    Source[Models.dev] --> Import[Import et validation]
-    Import --> DB[(SQLite)]
+    Prices[Models.dev] --> ImportP[Import prix]
+    Perf[Sources de performance] --> ImportB[Import performances]
+    ImportP --> Match[Rapprochement]
+    ImportB --> Match
+    Match --> DB[(SQLite)]
     DB --> API[API serveur Nuxt]
-    API --> UI[Catalogue et comparateur]
-    UI --> Calc[Calcul de coût dans le navigateur]
-    Browser[Volumes saisis] --> Calc
+    API --> UI[Catalogue, comparateur, optimiseur]
+    UI --> Domain[Calcul de coût, scores, optimisation]
+    Domain --> UI
 ```
 
-Le backend assure la collecte, la normalisation et la consultation. Le calculateur est une fonction métier côté navigateur : il n'envoie ni prompt ni scénario à Models.dev.
-
-### Organisation prévue
+Le serveur collecte, rapproche, normalise et expose les données. Le calcul de coût, l'agrégation des scores et l'optimisation sont des modules purs dans `shared/domain`, exécutés dans le navigateur : aucun scénario n'est envoyé à une source externe.
 
 ```text
 app/
-  pages/              Catalogue, fiches, comparaison, méthode
-  components/         Filtres, tableaux, formulaire, états de chargement
-  composables/        Sélection commune et favoris éventuels
+  pages/              Accueil et catalogue, nouveaux modèles, fiches, comparaison, optimisation, méthodes
+  components/         Filtres, tableaux, graphiques, formulaires, états
+  composables/        Sélection, scénario courant
 server/
   api/                Endpoints de lecture
-  services/           Collecte et normalisation Models.dev
+  services/
+    importers/        Un importeur par source
+    matching/         Rapprochement et table de correspondances
   repositories/       Accès SQLite
 shared/
   types/              Contrats de données
-  domain/             Calculs et validation du scénario
+  domain/
+    pricing/          Calcul de coût
+    scoring/          Normalisation, agrégation, confiance
+    optimizer/        Moteur d'optimisation
+    tasks/            Catégories et benchmarks associés
 tests/
-  fixtures/           Échantillons datés et cas synthétiques
-  unit/               Calcul et normalisation
-  integration/        API et import transactionnel
-  e2e/                Parcours catalogue vers comparaison
+  fixtures/           Échantillons datés de chaque source
+  unit/               Calcul, scores, optimisation, normalisation, rapprochement
+  integration/        API et imports transactionnels
+  e2e/                Parcours exploration et optimisation
 ```
 
-## 8. Modèle de données minimal
-
-Les noms suivants désignent le schéma interne proposé, pas un contrat imposé par Models.dev.
+## 13. Modèle de données
 
 | Entité | Champs principaux | Contraintes |
 | --- | --- | --- |
-| `providers` | `id`, `name`, `documentation_url` | Identifiant unique de la source |
-| `offers` | `id`, `provider_id`, `model_id`, `name`, prix entrée/sortie, contexte, limites entrée/sortie, modalités, capacités | Unicité de `(provider_id, model_id)` ; prix et capacités peuvent être inconnus |
-| `offers` — provenance | `source_url`, `source_updated_at`, `fetched_at`, `present_in_catalog`, `source_status` | Ne pas confondre collecte récente, mise à jour du modèle et disponibilité API |
-| `offers` — estimation | `pricing_supported`, `pricing_reason`, données tarifaires utiles à l'affichage | Une raison lisible explique tout calcul non pris en charge |
-| `sync_runs` | Début, fin, résultat, nombre d'offres et résumé d'erreur | Permet de connaître le dernier import réussi et le dernier essai |
+| `providers` | `id`, `name`, `documentation_url` | Identifiant unique |
+| `models` | `id`, `name`, `family`, `version`, `is_open_weights`, `release_date` | Alias pour les propriétaires, version exacte pour l'open source |
+| `offers` | `id`, `provider_id`, `model_id`, `input_price`, `output_price`, `context`, `max_input`, `max_output`, `modalities`, `capabilities` | Unicité de `(provider_id, model_id)` ; valeurs inconnues possibles |
+| `offers` — provenance | `source_url`, `source_updated_at`, `fetched_at`, `present_in_catalog`, `source_status` | Collecte, mise à jour et disponibilité distinctes |
+| `offers` — estimation | `pricing_supported`, `pricing_reason` | Raison lisible pour tout calcul non pris en charge |
+| `sources` | `id`, `name`, `url`, `license`, `refresh_period`, `priority` | Une ligne par source |
+| `benchmarks` | `id`, `name`, `scale`, `higher_is_better`, `normalization` | Échelle et méthode de normalisation explicites |
+| `task_categories` | `id`, `label`, `description` | Liste fixe |
+| `task_benchmarks` | `task_category_id`, `benchmark_id`, `weight` | Poids par catégorie |
+| `scores` | `benchmark_id`, `model_id`, `raw_value`, `source_id`, `measured_at`, `measured_version` | Unicité de `(benchmark_id, model_id, source_id)` |
+| `performance_metrics` | `model_id`, `latency_ms`, `throughput_tps`, `source_id`, `measured_at` | Médianes par modèle |
+| `source_mappings` | `source_id`, `external_id`, `model_id`, `status` | `validated`, `candidate` ou `rejected` |
+| `sync_runs` | `source_id`, `started_at`, `ended_at`, `result`, `item_count`, `error_summary` | Dernier succès et dernier essai par source |
 
-Stocker les montants sous forme décimale exacte, sérialisée en texte si nécessaire. Les filtres et tris de prix doivent utiliser une comparaison numérique explicite, jamais l'ordre alphabétique des chaînes. Indexer le fournisseur et la clé métier. Une recherche simple suffit pour le volume prévu ; aucun moteur de recherche externe n'est nécessaire.
+Les tables `benchmarks`, `task_categories` et `task_benchmarks` sont alimentées au démarrage depuis `shared/domain/tasks`, seule source de vérité des catégories et des poids.
 
-Les favoris P1 stockent uniquement des identifiants d'offres dans le navigateur. Si une offre disparaît, conserver un message explicite et permettre son retrait.
+Montants en décimal exact, sérialisés en texte ; filtres et tris numériques explicites. Index sur le fournisseur, la clé métier, `scores(model_id, benchmark_id)` et `source_mappings(source_id, external_id)`.
 
-## 9. Contrat de l'API interne
+## 14. API interne
 
-| Endpoint proposé | Usage | Règles |
+| Endpoint | Usage | Règles |
 | --- | --- | --- |
-| `GET /api/providers` | Fournisseurs disponibles dans les filtres | Retourne uniquement ceux du périmètre |
-| `GET /api/offers` | Catalogue filtré et paginé | Recherche, filtres, tri autorisé, page et taille de page bornés |
-| `GET /api/offers/[id]` | Détail d'une offre | ID local stable ; erreur 404 explicite si inconnu |
-| `GET /api/offers?ids=...` | Charger une sélection pour comparer | Maximum quatre identifiants ; identifiants absents signalés |
-| `GET /api/catalog-meta` | Fraîcheur et état du catalogue | Dernier succès, péremption et mode démonstration éventuel |
+| `GET /api/providers` | Fournisseurs du périmètre | — |
+| `GET /api/offers` | Catalogue filtré, trié, paginé | Paramètres validés ; taille de page bornée ; `category` pour les scores |
+| `GET /api/offers/[id]` | Détail avec scores, métriques et sources | 404 explicite si inconnu |
+| `GET /api/offers?ids=...` | Charger une sélection | 1 à 4 identifiants ; identifiants absents signalés |
+| `GET /api/models/new?days=...` | Nouveaux modèles avec leurs scores disponibles | `days` parmi 30, 90, 180 ; tri par date de sortie décroissante |
+| `GET /api/task-categories` | Catégories, benchmarks et poids | — |
+| `GET /api/candidates?categories=...` | Offres calculables avec prix, limites, scores bruts par catégorie et métriques, pour l'optimiseur et le fond du graphique prix × qualité | Contraintes secondaires appliquées côté serveur |
+| `GET /api/catalog-meta` | Fraîcheur et état de chaque source | Dernier succès, péremption, mode démonstration |
 
-La liste renvoie les éléments, le total, la page et les métadonnées de fraîcheur. Le détail conserve les mêmes unités et la même définition des capacités. Paramètres invalides : 400 ; aucun catalogue exploitable : 503 ; ancien catalogue encore utilisable : réponse normale accompagnée de sa date et de son état de fraîcheur.
-
-Le rafraîchissement est une tâche interne. L'interface publique ne fournit pas d'action permettant de lancer des imports arbitraires.
-
-## 10. Backlog et dépendances
-
-Les estimations sont des ordres de grandeur en jours-personnes, à recalibrer selon le niveau de l'équipe. Elles ne constituent pas une date de livraison.
-
-| Lot | Travail | Dépendances | Livrable vérifiable | Charge indicative |
-| --- | --- | --- | --- | --- |
-| L0 | Vérifier le JSON réel, trois fournisseurs et les règles de prix | Aucune | Échantillon daté, liste du périmètre et cas non calculables | 0,5–1 j |
-| L1 | Cadrer les écrans et figer les contrats de données | L0 | Maquettes simples et critères d'acceptation partagés | 0,5–1 j |
-| L2 | Installer le socle Nuxt, styles, types et vérifications locales | L1 | Application minimale compilable | 0,5–1 j |
-| L3 | Import, normalisation, SQLite et dernier catalogue valide | L0, L2 | Import fiable, répété sans doublons | 1,5–2,5 j |
-| L4 | API de lecture, recherche, filtres et pagination | L1, L3 | Contrats vérifiés avec des fixtures | 1–1,5 j |
-| L5 | Catalogue et fiche responsive | L1, L2 ; intégration après L4 | Navigation et sélection d'offres utilisables | 1,5–2 j |
-| L6 | Moteur de coût et tests des règles métier | L0, L1, L2 | Calcul indépendant de l'interface et cas limites vérifiés | 1–1,5 j |
-| L7 | Comparateur et formulaire de scénario | L4, L5, L6 | Parcours principal complet | 1–2 j |
-| L8 | Recette, accessibilité, erreurs et corrections | L3 à L7 | Critères P0 validés | 1–2 j |
-| L9 | Déploiement, documentation et préparation de démo | L8 | Version reproductible et soutenance prête | 1–1,5 j |
-
-La charge totale indicative est de 10,5 à 16 jours-personnes, soit environ 13 à 21 jours-personnes avec une marge de 20 à 30 % pour l'intégration et les imprévus. Cette charge est à répartir entre les trois membres selon leur disponibilité ; elle ne se convertit pas directement en durée calendaire à cause des dépendances. Le temps d'apprentissage d'une stack nouvelle s'y ajoute.
-
-Les lots interface, données et calcul peuvent avancer en parallèle après accord sur les contrats, avec les mêmes fixtures. Les tests métier sont développés avec les fonctionnalités ; L8 sert à l'intégration et à la recette.
-
-## 11. Organisation de l'équipe et jalons
-
-### Responsabilités
-
-| Rôle à attribuer | Périmètre principal | Lots dominants |
-| --- | --- | --- |
-| Membre A — Interface et catalogue | Maquettes, composants communs, catalogue, filtres, fiche et adaptation mobile | L1, L2, L5 |
-| Membre B — Données et API | Source, import, base, normalisation, endpoints, fraîcheur et préparation de l'hébergement | L0, L3, L4 |
-| Membre C — Comparaison et calcul | État de sélection, page de comparaison, règles tarifaires, formulaire et tests métier | L6, L7 |
-
-Les trois membres valident ensemble le contrat de données et prennent en charge L8 et L9. A vérifie notamment l'interface et l'accessibilité, B l'import et les endpoints, C les calculs et le parcours comparatif ; chacun documente sa partie et fait relire son travail par un autre membre. La soutenance comprend une démonstration de la contribution de chacun.
-
-Pour réduire les conflits, A possède les pages catalogue et fiche, B le dossier serveur, et C la page de comparaison et le module métier. Les types partagés sont modifiés en concertation. Pendant que B prépare les données, A et C avancent sur les mêmes fixtures validées au jalon J0.
-
-### Jalons sans dates imposées
-
-1. **J0 — Données comprises :** source et unités vérifiées, périmètre de prix choisi.
-2. **J1 — Première tranche fonctionnelle :** import persistant, API et catalogue minimal reliés.
-3. **J2 — Valeur utilisateur :** recherche, fiche et comparaison reliées au calculateur.
-4. **J3 — MVP robuste :** panne de source, valeurs inconnues et cas limites correctement gérés.
-5. **J4 — Livraison :** déploiement, documentation et répétition de la démonstration.
-
-À chaque jalon : courte démonstration, vérification des critères et révision du backlog. Si le temps manque, retirer les P1 en premier ; conserver la fiabilité des unités, des calculs et de la provenance.
-
-Chaque fonctionnalité est relue par un autre membre avant intégration. Les critères d'acceptation et les tests du lot servent de base à cette revue.
-
-## 12. Stratégie de vérification
-
-| Niveau | Cas essentiels |
-| --- | --- |
-| Normalisation | Deux fournisseurs avec le même `model_id` restent distincts ; IDs contenant `/` ; prix absent versus zéro ; capacité inconnue ; entrée obsolète |
-| Calcul | Exemple fictif à 60 USD ; volume nul ; valeurs négatives refusées ; précision des petits prix ; dépassement de contexte ; tarif à paliers exclu |
-| Classement | Même scénario pour toutes les offres ; offre non calculable exclue ; prix inconnu et offre à conditions inconnues ne gagnent pas le tri de coût |
-| Import et stockage | Import répété sans doublon ; réponse invalide conservant l'ancien catalogue ; échec sans données initiales ; disparition après import complet ; persistance après redémarrage |
-| API | Filtres combinés, ordre stable, limite de pagination, identifiant inconnu et métadonnées de fraîcheur |
-| Parcours complet | Recherche → sélection de trois offres → comparaison → saisie du volume → lecture du total ; utilisation sur mobile |
-
-Les tests automatiques utilisent des fixtures figées ; ils ne dépendent pas du réseau ni des tarifs du jour. Un contrôle manuel initial et avant livraison compare quelques offres à la source et aux pages des fournisseurs.
-
-Objectifs de recette supplémentaires : aucun appel d'inférence observé dans le réseau, aucun plantage sur les états vides, typecheck et build réussis, et endpoint catalogue répondant en moins de 500 ms à chaud sur le jeu de recette et l'environnement de démonstration documentés. Ce dernier seuil est une cible à mesurer.
-
-## 13. Risques et solutions prévues
-
-| Risque concret | Réponse prévue |
-| --- | --- |
-| La source est indisponible ou change de structure | Validation, fixtures et conservation du dernier import valide |
-| Les prix sont incomplets ou ont des conditions particulières | État non calculable avec raison, source visible et périmètre textuel standard |
-| Un zéro est interprété comme gratuité universelle | Affichage du tarif déclaré et vérification des conditions avant classement |
-| Le même nom de modèle apparaît chez plusieurs fournisseurs | Clé composée et fournisseur affiché dans toutes les vues |
-| Le projet devient trop large | Les fonctionnalités P1/P2 restent hors engagement MVP |
-| SQLite est déployé sur un disque éphémère | Serveur unique avec volume persistant ; vérifier un redémarrage lors de la recette |
-| La soutenance dépend d'une connexion instable | Mode démonstration avec échantillon daté explicitement signalé |
-| Les membres développent des formats incompatibles | Types partagés, contrat d'API et fixtures communs avant le travail parallèle |
-
-## 14. Déploiement et livrables
-
-Prévoir un seul processus Node et un volume persistant pour SQLite. Choisir l'hébergement avec l'équipe selon le budget disponible ; aucun coût mensuel n'est supposé acquis. Les seuls coûts attendus du MVP sont ceux de l'hébergement éventuel, sans consommation de tokens d'inférence.
-
-Le processus de livraison doit préciser l'installation, le build, le lancement, l'emplacement de la base et la récupération après échec d'import. Le catalogue doit rester disponible après un redémarrage. Le mode démonstration doit être activable séparément du mode normal.
-
-Livrables proposés, à ajuster aux exigences du cours :
-
-- Application fonctionnelle et procédure de lancement reproductible.
-- README : objectif, stack, configuration, lancement et tests.
-- Description de l'architecture, modèle de données et contrat des endpoints.
-- Backlog avec critères d'acceptation, répartition réelle et état des lots.
-- Résultats de recette et explication des décisions techniques principales.
-- Démonstration montrant un scénario complet et un cas de données indisponibles.
-- Attribution de Models.dev et conservation des notices applicables aux éléments réutilisés ; le dépôt source publie une [licence MIT](https://github.com/anomalyco/models.dev/blob/dev/LICENSE).
-
-## 15. Scénario de soutenance
-
-1. Présenter le besoin : choisir une offre API pour un projet au budget limité.
-2. Filtrer le catalogue par contexte et capacité, puis sélectionner trois offres.
-3. Saisir 10 000 requêtes mensuelles, 1 000 tokens d'entrée et 500 tokens de sortie.
-4. Montrer la décomposition du coût, changer le volume et observer la mise à jour.
-5. Ouvrir une offre à tarification non prise en charge et expliquer pourquoi aucun total trompeur n'est affiché.
-6. Simuler localement une panne de la source et montrer le dernier catalogue valide accompagné de sa date.
-7. Expliquer les responsabilités de chaque membre et montrer les tests des règles de calcul.
-
-Les prix de la démonstration proviennent du catalogue chargé. L'exemple fixe à 60 USD sert exclusivement à vérifier la formule avec des données fictives.
-
-## 16. Critères de fin du MVP
-
-- [ ] Les unités et la structure de la source ont été vérifiées sur un échantillon daté.
-- [ ] Le catalogue, les filtres, les fiches et la comparaison fonctionnent ensemble.
-- [ ] Toutes les estimations respectent le contrat métier de la section 6.
-- [ ] Chaque offre affiche son fournisseur, sa provenance et la fraîcheur des données.
-- [ ] Les prix absents, les conditions inconnues et les limites non renseignées ont un traitement explicite.
-- [ ] Les imports sont persistants, atomiques et résistants à une panne de la source.
-- [ ] Le parcours principal est utilisable au clavier et sur mobile.
-- [ ] Les tests essentiels, le typecheck et le build réussissent.
-- [ ] L'application se lance depuis la procédure documentée et survit à un redémarrage.
-- [ ] La démo et les livrables du cours ont été préparés par l'équipe.
+Paramètres invalides : 400. Aucun catalogue de prix : 503. Données anciennes : réponse normale avec date et état de fraîcheur. Aucun endpoint public ne déclenche d'import.
