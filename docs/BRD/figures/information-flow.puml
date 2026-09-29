@@ -1,0 +1,18 @@
+@startuml
+!pragma layout smetana
+!include style.iuml
+left to right direction
+actor Visitor
+actor "Registered User" as User
+actor Administrator as Admin
+rectangle "AI Models\nComparator" as App #D6EAF8
+rectangle "Benchmark\nSources" as Bench
+rectangle "AI News\nSources" as News
+Bench ..> App : <<flow>>\nbenchmark scores
+News ..> App : <<flow>>\nnews articles
+App ..> Visitor : <<flow>>\nrankings, models, news
+User ..> App : <<flow>>\nvotes, comments
+App ..> User : <<flow>>\nrankings, discussions
+Admin ..> App : <<flow>>\nmoderation actions
+App ..> Admin : <<flow>>\nimport status, comments
+@enduml

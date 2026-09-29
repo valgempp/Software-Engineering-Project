@@ -1,0 +1,26 @@
+@startuml
+!include style.iuml
+title Registration and Login
+start
+:Open login page;
+if () then ([has no account])
+  repeat
+    :Fill sign-up form\n(email, username, password);
+    :Accept privacy policy;
+  repeat while () is ([invalid data or email already used])
+  ->[valid];
+  :Create account (status ACTIVE);
+else ([has an account])
+  repeat
+    :Enter email and password;
+  repeat while () is ([wrong credentials])
+  ->[correct];
+  if () then ([account BLOCKED])
+    :Show "account blocked" message;
+    stop
+  else ([account ACTIVE])
+  endif
+endif
+:Open user session;
+stop
+@enduml

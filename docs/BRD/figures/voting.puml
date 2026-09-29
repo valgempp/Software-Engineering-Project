@@ -1,0 +1,29 @@
+@startuml
+!include style.iuml
+hide footbox
+actor User
+participant "Web App" as UI
+participant "Server" as API
+database "Database" as DB
+User -> UI ++ : openModelPage(slug)
+UI -> API ++ : GET model details
+API -> DB ++ : read model, scores, votes
+return data
+return model, rankings, my vote
+return page displayed
+User -> UI ++ : clickArrow(direction)
+UI -> API ++ : sendVote(model, direction)
+alt no previous vote
+  API -> DB ++ : insert vote
+  return ok
+else same arrow clicked again
+  API -> DB ++ : delete vote
+  return ok
+else other arrow clicked
+  API -> DB ++ : update vote
+  return ok
+end
+API -> API : recomputeCommunityScore()
+return new score, vote count
+return score updated
+@enduml

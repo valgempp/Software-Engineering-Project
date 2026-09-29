@@ -1,0 +1,15 @@
+skinparam defaultFontName Helvetica
+skinparam shadowing false
+skinparam monochrome false
+skinparam ArrowColor #333333
+skinparam ActivityBackgroundColor #D6EAF8
+skinparam ActivityBorderColor #2E86C1
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #333333
+skinparam SwimlaneTitleFontStyle bold
+skinparam SequenceLifeLineBorderColor #555555
+skinparam ParticipantBackgroundColor #D6EAF8
+skinparam ParticipantBorderColor #2E86C1
+skinparam ActorBorderColor #333333
+skinparam ActorBackgroundColor #FFFFFF
+skinparam SequenceGroupBorderColor #333333

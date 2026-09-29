@@ -1,0 +1,29 @@
+@startuml
+!include style.iuml
+title Comment Moderation
+|User|
+start
+:Write comment;
+:Publish comment;
+|System|
+:Save comment;
+:Show comment at the top\nof the model feed;
+|Administrator|
+:Review recent comments;
+if () then ([comment is OK])
+  :Keep comment;
+  stop
+else ([inappropriate])
+  if () then ([first time])
+  else ([repeated abuse])
+    :Block author;
+    |System|
+    :Set author status\nto BLOCKED;
+    |Administrator|
+  endif
+  :Delete comment;
+endif
+|System|
+:Remove comment from the feed;
+stop
+@enduml
