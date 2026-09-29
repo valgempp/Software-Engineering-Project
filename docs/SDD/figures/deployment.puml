@@ -6,7 +6,7 @@ skinparam ArtifactBackgroundColor #D6EAF8
 skinparam ArtifactBorderColor #2E86C1
 node "Client Device" <<device>> {
   node "Web Browser" <<execution environment>> {
-    artifact "React SPA\n(HTML, CSS, JS)" as SPA
+    artifact "React SPA\n(built from TSX)" as SPA
   }
 }
 node "Web Server" <<device>> {
@@ -17,8 +17,9 @@ node "Web Server" <<device>> {
 }
 node "Application Server" <<device>> {
   node "Node.js 22" <<execution environment>> {
-    artifact "api.js\n(Express)" as API
-    artifact "import-jobs.js\n(node-cron)" as Jobs
+    artifact "api\n(Express, TypeScript)" as API
+    artifact "import-jobs\n(node-cron, TypeScript)" as Jobs
+    artifact "uploads/\n(lab logos)" as Up
   }
 }
 node "Database Server" <<device>> {
@@ -31,8 +32,8 @@ node "External Services" <<device>> {
 SPA --> Static : <<HTTPS>>
 SPA --> Proxy : <<HTTPS>>\n/api/*
 Proxy --> API : <<HTTP>>
-API --> DB : <<TCP/IP>>\nSQL
-Jobs --> DB : <<TCP/IP>>\nSQL
+API --> DB : <<TCP/IP>>\nTypeORM
+Jobs --> DB : <<TCP/IP>>\nTypeORM
 Jobs --> BS : <<HTTPS>>\nREST / JSON
 Jobs --> NS : <<HTTPS>>\nRSS / XML
 @enduml

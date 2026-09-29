@@ -12,22 +12,24 @@ loop for each source
   IS -> BS ++ : GET /scores
   return JSON or error
   alt response is valid
-    IS -> DB ++ : BEGIN transaction
+    IS -> DB ++ : start transaction (dataSource.transaction)
     loop for each score
-      IS -> IS : find model by name
-      opt model not in catalogue
-        IS -> DB : insert model and lab
+      IS -> DB : find alias (source, external name)
+      alt alias linked to a model
+        IS -> DB : upsert score (model, benchmark)
+      else unknown name
+        IS -> DB : save unlinked alias, skip score
       end
-      IS -> DB : upsert score (model, benchmark)
     end
     IS -> DB : set last_success_at = now()
-    IS -> DB : COMMIT
+    IS -> DB : end transaction
     deactivate DB
   else error or invalid data
     IS -> DB ++ : set last_error, keep old scores
     return ok
   end
 end
-IS -> IS : recompute benchmark ranking
+IS -> DB ++ : RankingService: save benchmark\nscores and ranks in models
+return ok
 return done
 @enduml

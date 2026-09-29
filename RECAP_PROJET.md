@@ -11,11 +11,12 @@ Application web de comparaison de modèles d'IA. Chaque modèle est évalué de 
 1. **Classement communautaire**
    - Un utilisateur connecté vote pour un modèle : up ou down, comme sur Reddit.
    - Un seul vote par utilisateur et par modèle. Re-cliquer sur la flèche active retire le vote, cliquer sur l'autre flèche l'inverse.
-   - Score communautaire = % de votes up (up ÷ total). Un modèle n'est classé qu'à partir de **10 votes** ; en dessous, il affiche « Pas assez de votes ».
+   - Score communautaire = % de votes up (up ÷ total), affiché dès le premier vote. Un modèle n'obtient un rang qu'à partir de **10 votes** ; en dessous, il affiche « Pas assez de votes ».
 2. **Classement benchmarks**
    - Le backend récupère automatiquement les scores publiés par des sources externes.
    - Seuls les benchmarks exprimés en pourcentage de réussite (0–100) sont retenus, ce qui les rend comparables sans conversion.
-   - Score benchmarks d'un modèle = moyenne de ses scores disponibles. Un modèle n'est classé qu'à partir de **3 benchmarks** ; en dessous, il affiche « Pas assez de benchmarks ».
+   - Score benchmarks d'un modèle = moyenne de ses scores disponibles. Un modèle n'obtient un rang qu'à partir de **3 benchmarks** ; en dessous, il affiche « Pas assez de benchmarks ».
+   - Si deux sources donnent le même benchmark pour le même modèle, l'import le plus récent l'emporte.
 3. **Commentaires par modèle**
    - Chaque modèle a un fil de discussion unique, sans réponses, comme un groupe WhatsApp. Le plus récent est en haut, le champ de saisie au-dessus du fil.
    - Un utilisateur peut publier autant de commentaires qu'il veut.
@@ -23,18 +24,20 @@ Application web de comparaison de modèles d'IA. Chaque modèle est évalué de 
    - Actualités sur les nouveaux modèles d'IA, récupérées automatiquement et affichées telles quelles (titre, source, date, lien vers l'article).
 5. **Administration**
    - L'admin supprime des commentaires, bloque ou débloque des utilisateurs, supprime des comptes et consulte l'état des imports.
+   - Il relie les noms de modèles inconnus des sources à un modèle existant, ou crée le modèle et son lab (nom + logo déposé en image). L'import ne crée jamais de modèle tout seul.
 
 L'intérêt de l'application est de confronter les deux classements : un modèle bien classé aux benchmarks convainc-t-il aussi les utilisateurs, et inversement ?
 
-**Stack imposée :** React (frontend) et Node.js/Express (backend).
+**Stack :** React (frontend) et Node.js/Express (backend), imposés par le cours. Tout en TypeScript (TSX pour React), pas de JavaScript. Base PostgreSQL via l'ORM TypeORM (demandé par le prof) : aucun SQL écrit à la main.
 
 ### Acteurs
 
 | Acteur | Droits |
 | --- | --- |
-| Visiteur | Consulte toutes les pages publiques ; ne vote pas et ne commente pas |
-| Utilisateur | Hérite du visiteur ; vote, commente, supprime ses commentaires et son compte |
-| Admin | Hérite de l'utilisateur ; modère les commentaires et les comptes, consulte l'état des imports |
+| Visiteur (abstrait) | Ce que tout le monde peut faire : consulter les modèles, les classements et les news |
+| Invité (`Guest`) | Hérite du visiteur ; s'inscrire, se connecter |
+| Utilisateur | Hérite du visiteur ; vote, commente, supprime ses commentaires et son compte, se déconnecte |
+| Admin | Hérite de l'utilisateur ; modère commentaires et comptes, consulte les imports, relie les noms de modèles, gère les logos des labs |
 | Sources externes | Fournissent les scores de benchmarks et les news |
 
 ### Règles métier
@@ -44,8 +47,11 @@ L'intérêt de l'application est de confronter les deux classements : un modèle
 | Vote | Un par couple (utilisateur, modèle), modifiable ; seule la dernière valeur est conservée (pas d'historique) |
 | Blocage | Un utilisateur bloqué ne peut plus se connecter ; ses votes et commentaires restent visibles ; l'admin peut le débloquer |
 | Suppression d'un compte | Par l'utilisateur ou l'admin : suppression totale de ses votes et commentaires (RGPD) |
-| Données personnelles | Seuls l'e-mail, le pseudo et le mot de passe haché sont stockés (RGPD : minimisation) |
+| Données personnelles | Seuls l'e-mail, le nom d'utilisateur (`username`) et le mot de passe haché sont stockés (RGPD : minimisation) |
 | Lab | Le créateur du modèle (Llama → Meta), pas l'hébergeur |
+| Inscription | L'utilisateur est connecté automatiquement après l'inscription |
+| Navigation | Menu : Models, Ranking, News, puis « Log in » (invité) ou « Account » + « Log out » (connecté). Aucun lien vers `/admin` : l'admin tape l'URL |
+| Logo d'un lab | Déposé par l'admin (PNG, JPEG ou WebP, 1 Mo max) ; sans logo, on affiche l'initiale |
 | URL d'un modèle | Un slug généré à partir du nom : `GPT-4o (2024-08-06)` → `/models/gpt-4o-2024-08-06` |
 
 ### Pages
@@ -53,121 +59,34 @@ L'intérêt de l'application est de confronter les deux classements : un modèle
 | Route | Accès | Contenu | Actions |
 | --- | --- | --- | --- |
 | `/` | Public | Titre de l'application, 3 boutons | Aller vers Models, Ranking, News |
-| `/login` | Public | Onglets Connexion / Inscription (e-mail, pseudo, mot de passe) ; case d'acceptation de la politique de confidentialité | Se connecter, créer un compte ; message spécifique si le compte est bloqué |
+| `/login` | Public | Onglets Connexion / Inscription (e-mail, nom d'utilisateur, mot de passe) ; case d'acceptation de la politique de confidentialité | Se connecter, créer un compte ; message spécifique si le compte est bloqué |
 | `/models` | Public | Mosaïque des labs (logo, nom) par ordre alphabétique ; sous chaque lab, ses modèles | Ouvrir la fiche d'un modèle |
 | `/models/:slug` | Public ; actions réservées aux connectés | En-tête : nom, lab, date de sortie. Rangs communauté et benchmarks. Tableau des benchmarks (benchmark, score, source). Score communautaire (% up, nombre de votes). Fil de commentaires | Voter up/down ; commenter ; supprimer ses commentaires. Admin : « Supprimer » et « Bloquer l'auteur » sur chaque commentaire. Visiteur : « Connecte-toi pour voter ou commenter » |
 | `/ranking` | Public | Classement ordonné ; chaque ligne : rang, modèle, lab, score, et rang dans l'autre classement. Modèles non classés listés en dessous | Bouton de bascule communauté / benchmarks ; ouvrir la fiche d'un modèle |
 | `/news` | Public | Liste des news, de la plus récente à la plus ancienne : titre, source, date | Ouvrir l'article d'origine |
-| `/account` | Connecté | Pseudo, e-mail | Supprimer son compte (avec confirmation) |
-| `/admin` | Admin | Utilisateurs (pseudo, e-mail, état) ; derniers commentaires ; état des imports par source (dernier succès, dernière erreur) | Bloquer, débloquer, supprimer un utilisateur ; supprimer un commentaire |
+| `/account` | Connecté (bouton « Account » du menu) | Nom d'utilisateur, e-mail | Supprimer son compte (avec confirmation) |
+| `/admin` | Admin (aucun lien, URL tapée à la main) | Utilisateurs (nom d'utilisateur, e-mail, état) ; derniers commentaires ; état des imports par source ; noms de modèles à relier ; labs | Bloquer, débloquer, supprimer un utilisateur ; supprimer un commentaire ; relier un nom ; créer un lab et déposer son logo |
 
 États gérés sur toutes les pages : chargement, liste vide, erreur réseau, 404 (modèle inconnu), 403 (accès admin refusé). Interface responsive : les tableaux passent en cartes sur mobile.
 
-### Diagramme de classes
+### Diagrammes
 
-```mermaid
-classDiagram
-    class Role {
-        <<enumeration>>
-        USER
-        ADMIN
-    }
-    class UserStatus {
-        <<enumeration>>
-        ACTIVE
-        BLOCKED
-    }
-    class VoteType {
-        <<enumeration>>
-        UP
-        DOWN
-    }
-    class SourceType {
-        <<enumeration>>
-        BENCHMARK
-        NEWS
-    }
-    class User {
-        id
-        email
-        pseudo
-        passwordHash
-        role: Role
-        status: UserStatus
-        createdAt
-    }
-    class Lab {
-        id
-        name
-        logoUrl
-    }
-    class LLMModel {
-        id
-        name
-        slug
-        releaseDate
-    }
-    class Vote {
-        type: VoteType
-        updatedAt
-    }
-    class Comment {
-        id
-        content
-        createdAt
-    }
-    class Benchmark {
-        id
-        name
-        description
-    }
-    class Score {
-        value
-        fetchedAt
-    }
-    class Source {
-        id
-        name
-        url
-        type: SourceType
-        lastSuccessAt
-        lastError
-    }
-    class News {
-        id
-        title
-        url
-        publishedAt
-    }
+La version à jour de tous les diagrammes est dans les documents : sources PlantUML dans `docs/*/figures/*.puml`, images `.png` à côté.
 
-    Lab "1" -- "1..*" LLMModel : crée
-    User "0..*" -- "0..*" LLMModel : vote
-    User "1" *-- "0..*" Comment : écrit
-    LLMModel "1" -- "0..*" Comment : concerne
-    LLMModel "0..*" -- "0..*" Benchmark : évalué sur
-    Score "0..*" -- "1" Source : provient de
-    News "0..*" -- "1" Source : provient de
-```
+| Diagramme | Fichier |
+| --- | --- |
+| Classes (5 packages, 4 énumérations, classes d'association `Vote` et `Score`, `ModelAlias`) | `docs/SRS/figures/class.puml` |
+| Cas d'utilisation (Visitor abstrait, Guest, Registered User, Administrator) | `docs/SRS/figures/usecase.puml` |
+| États du compte utilisateur (Active avec LoggedIn / LoggedOut, Blocked) | `docs/SDD/figures/account-state.puml` |
+| Entité-association (tables TypeORM / PostgreSQL) | `docs/SDD/figures/er.puml` |
 
-Mermaid ne sait pas dessiner les classes d'association : `Vote` porte sur le lien User — LLMModel, `Score` sur le lien LLMModel — Benchmark. Dans draw.io ou StarUML, les dessiner avec une ligne pointillée vers l'association.
-
-Justifications :
+Justifications du diagramme de classes :
 
 - **`Vote` est une classe d'association** : exactement un vote par couple (utilisateur, modèle). **`Comment` n'en est pas une** : plusieurs commentaires par couple, d'où une classe ordinaire avec deux associations.
 - **Composition User ◆— Comment** : supprimer un compte supprime ses commentaires (règle RGPD). Un composant n'a qu'un seul composite, d'où une association simple avec `LLMModel`.
 - **`Score` est une classe d'association** : un score par couple (modèle, benchmark). Le nom du benchmark n'est stocké qu'une fois, dans `Benchmark`.
+- **`ModelAlias`** : nom qu'une source donne à un modèle, relié à 0 ou 1 modèle tant que l'admin ne l'a pas vérifié. Évite les doublons de modèles.
 - **Quatre énumérations** : `Role`, `UserStatus`, `VoteType`, `SourceType` (le TP1 en exige au moins une).
-
-### Diagramme d'états : compte utilisateur
-
-```mermaid
-stateDiagram-v2
-    [*] --> Active : register()
-    Active --> Blocked : block() [admin]
-    Blocked --> Active : unblock() [admin]
-    Active --> [*] : deleteAccount() [utilisateur ou admin]
-    Blocked --> [*] : deleteAccount() [admin]
-```
 
 ### Questions ouvertes
 

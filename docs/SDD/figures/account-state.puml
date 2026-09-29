@@ -3,15 +3,17 @@
 skinparam StateBackgroundColor #D6EAF8
 skinparam StateBorderColor #2E86C1
 title User Account
-[*] --> Active : register() / create account
 state Active {
+  state LoggedOut
+  state LoggedIn
   [*] --> LoggedOut
   LoggedOut --> LoggedIn : login() [valid password]
   LoggedIn --> LoggedOut : logout() or session expired
 }
-Active --> Blocked : block() [by admin] / end sessions
-Blocked --> Active : unblock() [by admin]
-Blocked : entry / refuse every login
-Active --> [*] : deleteAccount() / delete votes and comments
-Blocked --> [*] : deleteAccount() [by admin] / delete votes and comments
+state Blocked : entry / refuse every login
+[*] --> LoggedIn : register() / create account,\nopen session
+Active -right-> Blocked : block() [by admin]\n/ refuse next requests
+Blocked -left-> Active : unblock() [by admin]
+Active --> [*] : deleteAccount()\n/ delete votes and comments
+Blocked --> [*] : deleteAccount() [by admin]\n/ delete votes and comments
 @enduml

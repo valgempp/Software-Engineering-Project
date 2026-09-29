@@ -82,6 +82,9 @@ package Sources {
     - lastError : String
     + runImport()
   }
+  class ModelAlias {
+    - externalName : String
+  }
   class News {
     - id : int
     - title : String
@@ -98,4 +101,6 @@ LLMModel "0..*" -- "0..*" Benchmark : is tested on >
 (LLMModel, Benchmark) .. Score
 Score "0..*" --> "1" Source : comes from >
 News "0..*" --> "1" Source : comes from >
+Source "1" -- "0..*" ModelAlias : uses >
+ModelAlias "0..*" --> "0..1" LLMModel : refers to >
 @enduml

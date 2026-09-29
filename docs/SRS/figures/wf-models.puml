@@ -6,11 +6,11 @@
   .
   {#
     <&image> <b>Anthropic | <&image> <b>Google | <&image> <b>Meta
-    Claude Opus | Gemini Pro | Llama 4
-    Claude Sonnet | Gemini Flash | Llama 3.3
+    Claude Opus | Gemini Flash | Llama 3.3
+    Claude Sonnet | Gemini Pro | Llama 4
     <&image> <b>Mistral | <&image> <b>OpenAI | <&image> <b>xAI
-    Mistral Large | GPT-5 | Grok 4
     Codestral | GPT-4o | Grok 3
+    Mistral Large | GPT-5 | Grok 4
   }
 }
 @endsalt

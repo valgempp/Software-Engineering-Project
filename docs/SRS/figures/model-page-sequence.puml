@@ -2,28 +2,27 @@
 !include style.iuml
 hide footbox
 actor Visitor
-participant "React App" as UI
-participant "Express API" as API
-database "PostgreSQL" as DB
-Visitor -> UI ++ : open /models/{slug}
-UI -> API ++ : GET /api/models/{slug}
+participant "Web App" as UI
+participant "Server" as API
+database "Database" as DB
+Visitor -> UI ++ : open model page
+UI -> API ++ : getModel(slug)
 API -> DB ++ : find model by slug
-return model or null
+return model with stored scores and ranks, or null
 alt model not found
-  API --> UI : 404 Not Found
+  API --> UI : error: not found
   UI --> Visitor : show "Model not found"
 else model found
-  API -> DB ++ : get lab, scores and sources
+  API -> DB ++ : get lab, benchmark scores and sources
   return data
   API -> DB ++ : count votes
   return counts
-  API -> API : compute ranks
-  API --> UI : 200 {model, scores, ranks, votes}
+  API --> UI : model, scores, ranks, votes
   deactivate API
-  UI -> API ++ : GET /api/models/{slug}/comments
-  API -> DB ++ : get comments (newest first)
+  UI -> API ++ : getComments(slug, page 1)
+  API -> DB ++ : get 20 newest comments
   return comments
-  return 200 [comments]
+  return comments
   UI --> Visitor : show model page
 end
 deactivate UI

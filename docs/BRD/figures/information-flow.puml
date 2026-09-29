@@ -13,6 +13,6 @@ News ..> App : <<flow>>\nnews articles
 App ..> Visitor : <<flow>>\nrankings, models, news
 User ..> App : <<flow>>\nvotes, comments
 App ..> User : <<flow>>\nrankings, discussions
-Admin ..> App : <<flow>>\nmoderation actions
-App ..> Admin : <<flow>>\nimport status, comments
+Admin ..> App : <<flow>>\nmoderation actions,\nmodel name links, lab logos
+App ..> Admin : <<flow>>\nimport status, comments,\nunknown model names
 @enduml

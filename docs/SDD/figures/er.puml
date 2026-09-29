@@ -10,8 +10,8 @@ entity users {
   * email : VARCHAR(255) <<UNIQUE>>
   * username : VARCHAR(30) <<UNIQUE>>
   * password_hash : VARCHAR(255)
-  * role : VARCHAR(10)
-  * status : VARCHAR(10)
+  * role : ENUM(USER, ADMIN)
+  * status : ENUM(ACTIVE, BLOCKED)
   * created_at : TIMESTAMP
 }
 entity labs {
@@ -27,12 +27,23 @@ entity models {
   * name : VARCHAR(100)
   * slug : VARCHAR(120) <<UNIQUE>>
   release_date : DATE
+  community_score : NUMERIC(5,2)
+  community_rank : INT
+  benchmark_score : NUMERIC(5,2)
+  benchmark_rank : INT
+}
+entity model_aliases {
+  * id : SERIAL <<PK>>
+  --
+  * source_id : INT <<FK>>
+  * external_name : VARCHAR(150)
+  model_id : INT <<FK>>
 }
 entity votes {
   * user_id : INT <<PK, FK>>
   * model_id : INT <<PK, FK>>
   --
-  * type : VARCHAR(4)
+  * type : ENUM(UP, DOWN)
   * updated_at : TIMESTAMP
 }
 entity comments {
@@ -62,7 +73,7 @@ entity sources {
   --
   * name : VARCHAR(100)
   * url : TEXT
-  * type : VARCHAR(10)
+  * type : ENUM(BENCHMARK, NEWS)
   last_success_at : TIMESTAMP
   last_error : TEXT
 }
@@ -83,4 +94,6 @@ models ||--o{ scores
 benchmarks ||--o{ scores
 sources ||--o{ scores
 sources ||--o{ news
+sources ||--o{ model_aliases
+models |o--o{ model_aliases
 @enduml

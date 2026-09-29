@@ -3,13 +3,14 @@
 skinparam UsecaseBackgroundColor #D6EAF8
 skinparam UsecaseBorderColor #2E86C1
 left to right direction
-skinparam packageStyle rectangle
-actor Visitor
+actor "Visitor" as Visitor <<abstract>>
+actor Guest
 actor "Registered User" as User
 actor Administrator as Admin
 actor Timer
 actor "Benchmark Source" as BS
 actor "News Source" as NS
+Visitor <|-- Guest
 Visitor <|-- User
 User <|-- Admin
 rectangle "AI Models Comparator" {
@@ -20,15 +21,18 @@ rectangle "AI Models Comparator" {
   usecase "Read AI news" as UC5
   usecase "Sign up" as UC6
   usecase "Log in" as UC7
+  usecase "Log out" as UC18
   usecase "Vote for a model" as UC8
   usecase "Comment on a model" as UC9
   usecase "Delete a comment" as UC10
   usecase "Delete own comment" as UC10a
   usecase "Delete any comment" as UC10b
-  usecase "Block author" as UC11
+  usecase "Block user" as UC11
   usecase "Unblock user" as UC12
-  usecase "Delete account" as UC13
+  usecase "Delete own account" as UC13
+  usecase "Delete user account" as UC19
   usecase "Check import status" as UC14
+  usecase "Link model names" as UC17
   usecase "Import benchmark scores" as UC15
   usecase "Import news" as UC16
 }
@@ -36,22 +40,24 @@ Visitor --> UC1
 Visitor --> UC2
 Visitor --> UC3
 Visitor --> UC5
-Visitor --> UC6
-Visitor --> UC7
+Guest --> UC6
+Guest --> UC7
 User --> UC8
 User --> UC9
 User --> UC10a
 User --> UC13
+User --> UC18
 Admin --> UC10b
+Admin --> UC11
 Admin --> UC12
+Admin --> UC19
 Admin --> UC14
+Admin --> UC17
 Timer --> UC15
 Timer --> UC16
 UC15 --> BS
 UC16 --> NS
 UC4 .> UC3 : <<extend>>
-UC8 .> UC7 : <<include>>
-UC9 .> UC7 : <<include>>
 UC10 <|-- UC10a
 UC10 <|-- UC10b
 UC11 .> UC10b : <<extend>>

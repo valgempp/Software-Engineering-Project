@@ -4,11 +4,11 @@ skinparam ComponentBackgroundColor #D6EAF8
 skinparam ComponentBorderColor #2E86C1
 skinparam PackageBorderColor #555555
 skinparam linetype ortho
-package "Frontend (React SPA)" {
+package "Frontend (React + TypeScript)" {
   component Pages
   component "API Client" as Client
 }
-package "Backend (Node.js / Express)" {
+package "Backend (Node.js / Express, TypeScript)" {
   component "REST Routes" as Routes
   package "Services" {
     component AuthService
@@ -21,7 +21,7 @@ package "Backend (Node.js / Express)" {
     component ImportService
   }
   component Scheduler
-  component "Data Access\n(Prisma ORM)" as DAL
+  component "Data Access\n(TypeORM)" as DAL
 }
 database PostgreSQL as DB
 cloud "External Sources\n(Benchmark API, News RSS)" as Ext
@@ -39,6 +39,6 @@ Scheduler --> ImportService
 AdminService --> ImportService
 ImportService --> RankingService
 Services --> DAL
-DAL --> DB : SQL
+DAL --> DB : TypeORM
 ImportService --> Ext : HTTPS
 @enduml

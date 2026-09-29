@@ -12,7 +12,7 @@
 \usepackage[hidelinks]{hyperref}
 
 \newcommand{\product}{AI Models Comparator}
-\newcommand{\team}{Vivien Gruel \\ Noé Wales \\ Valentin Gempp \\ Maxence Tessier}
+\newcommand{\team}{Vivien GRUEL \\ Noé WALES \\ Valentin GEMPP \\ Maxence TESSIER}
 
 \pagestyle{fancy}
 \fancyhf{}
@@ -78,7 +78,7 @@ Section 2 gives a general description of the product. Section 3 lists the functi
 
 \subsection{Product Perspective}
 
-The \product{} is a new, independent web application. It has a React frontend and a Node.js/Express backend with a PostgreSQL database. It depends on external websites for the benchmark scores and the AI news. These data are imported automatically by the backend and stored in the database, so the users never call the external websites directly.
+The \product{} is a new, independent web application. It has a web interface, a server and a database. It depends on external websites for the benchmark scores and the AI news. These data are imported automatically by the backend and stored in the database, so the users never call the external websites directly.
 
 \subsection{Product Features}
 
@@ -96,15 +96,15 @@ The \product{} is a new, independent web application. It has a React frontend an
 \subsection{User Characteristics}
 
 \begin{itemize}
-  \item \textbf{Visitor:} any person on the website without an account. Can read everything but cannot vote or comment.
-  \item \textbf{Registered user:} a visitor with an account. Can vote, comment, and delete their own comments and account. Usually developers, students or AI fans.
+  \item \textbf{Guest:} a person who is not logged in. Can read everything, sign up and log in, but cannot vote or comment.
+  \item \textbf{Registered user:} a person with an account who is logged in. Can vote, comment, and delete their own comments and account. Usually developers, students or AI fans.
   \item \textbf{Administrator:} a registered user with the ADMIN role. Can moderate all comments and users.
 \end{itemize}
 
 \subsection{General Constraints}
 
 \begin{itemize}
-  \item The frontend must be developed with React and the backend with Node.js (course requirement).
+  \item The frontend must be developed with React and the backend with Node.js (course requirement). All the code is written in TypeScript (TSX for the React components); no plain JavaScript.
   \item The system must respect the GDPR.
   \item The system must respect the terms of use of the external data sources.
   \item The project must be finished during the sprints of the course, by a team of four students.
@@ -125,10 +125,10 @@ The \product{} is a new, independent web application. It has a React frontend an
 \subsubsection{Model Catalogue}
 
 \begin{itemize}
-  \item \textbf{FR-1.1:} The system must display all the labs in alphabetical order, each with its logo and name.
+  \item \textbf{FR-1.1:} The system must display all the labs in alphabetical order, each with its logo and name. A lab without logo shows the first letter of its name.
   \item \textbf{FR-1.2:} Under each lab, the system must display the names of its models in alphabetical order.
   \item \textbf{FR-1.3:} When the user clicks on a model, the system must open the model page at \texttt{/models/\{slug\}}.
-  \item \textbf{FR-1.4:} The model page must show the name, the lab, the release date, the two ranks, the table of benchmark scores (benchmark, score, source), the community score with the number of votes, and the comment feed.
+  \item \textbf{FR-1.4:} The model page must show the name, the lab, the release date, the two ranks, the table of benchmark scores (benchmark, score, source), the community score with the number of votes, and the comment feed. If the model is not ranked yet, its scores are still shown, with ``Not ranked'' instead of the rank.
   \item \textbf{FR-1.5:} If the slug does not exist, the system must display a ``Model not found'' page (404).
 \end{itemize}
 
@@ -139,7 +139,7 @@ The \product{} is a new, independent web application. It has a React frontend an
   \item \textbf{FR-2.2:} The system must only keep benchmarks expressed as a percentage (0 to 100).
   \item \textbf{FR-2.3:} The benchmark score of a model is the average of all its benchmark results.
   \item \textbf{FR-2.4:} A model is in the benchmark ranking only if it has at least 3 benchmark results. Otherwise, it is shown in a ``Not enough benchmarks'' list.
-  \item \textbf{FR-2.5:} Each score must show its source and the date when it was imported.
+  \item \textbf{FR-2.5:} Each score must show its source and the date when it was imported. If two sources give the same benchmark for the same model, the most recent import is kept.
 \end{itemize}
 
 \subsubsection{Community Ranking}
@@ -149,7 +149,7 @@ The \product{} is a new, independent web application. It has a React frontend an
   \item \textbf{FR-3.2:} If the user clicks on the selected arrow again, the vote is removed. If the user clicks on the other arrow, the vote is changed.
   \item \textbf{FR-3.3:} The community score of a model is: \emph{up votes / (up votes + down votes) $\times$ 100}.
   \item \textbf{FR-3.4:} A model is in the community ranking only if it has at least 10 votes. Otherwise, it is shown in a ``Not enough votes'' list.
-  \item \textbf{FR-3.5:} A visitor who clicks on an arrow sees the message ``Log in to vote''.
+  \item \textbf{FR-3.5:} A guest who clicks on an arrow sees the message ``Log in to vote''.
 \end{itemize}
 
 \subsubsection{Ranking Comparison}
@@ -167,7 +167,8 @@ The \product{} is a new, independent web application. It has a React frontend an
   \item \textbf{FR-5.2:} A logged-in user can post as many comments as they want. A comment has between 1 and 1000 characters.
   \item \textbf{FR-5.3:} Each comment shows the username of the author, the date and the text.
   \item \textbf{FR-5.4:} A user can delete their own comments.
-  \item \textbf{FR-5.5:} A visitor sees the comments but the form is replaced by ``Log in to comment''.
+  \item \textbf{FR-5.5:} A guest sees the comments but the form is replaced by ``Log in to comment''.
+  \item \textbf{FR-5.6:} The feed shows the 20 newest comments first. A ``Load more'' button shows the next 20.
 \end{itemize}
 
 \subsubsection{AI News}
@@ -181,22 +182,24 @@ The \product{} is a new, independent web application. It has a React frontend an
 \subsubsection{User Accounts}
 
 \begin{itemize}
-  \item \textbf{FR-7.1:} A visitor can create an account with an email, a username and a password. The email and the username must be unique.
+  \item \textbf{FR-7.1:} A guest can create an account with an email, a username and a password. The email and the username must be unique.
   \item \textbf{FR-7.2:} The password must have at least 8 characters.
-  \item \textbf{FR-7.3:} The visitor must accept the privacy policy to create an account.
-  \item \textbf{FR-7.4:} A user can log in with the email and the password, and log out.
-  \item \textbf{FR-7.5:} A blocked user cannot log in and sees the message ``Your account is blocked''.
+  \item \textbf{FR-7.3:} The guest must accept the privacy policy to create an account.
+  \item \textbf{FR-7.4:} A user can log in with the email and the password, and log out. After sign up, the user is logged in automatically.
+  \item \textbf{FR-7.5:} A blocked user cannot log in and sees the message ``Your account is blocked''. If the user is already logged in, they are logged out at their next action.
   \item \textbf{FR-7.6:} A user can delete their account after a confirmation. All their votes and comments are deleted.
+  \item \textbf{FR-7.7:} When the user is logged in, the menu shows an ``Account'' button (to \texttt{/account}) and a ``Log out'' button instead of ``Log in''.
 \end{itemize}
 
 \subsubsection{Administration}
 
 \begin{itemize}
-  \item \textbf{FR-8.1:} Only users with the ADMIN role can open the administration page.
+  \item \textbf{FR-8.1:} Only users with the ADMIN role can open the administration page. There is no link to this page anywhere in the interface: the administrator types \texttt{/admin} in the address bar. Other users get an ``Access denied'' page.
   \item \textbf{FR-8.2:} An administrator can delete any comment.
   \item \textbf{FR-8.3:} An administrator can block or unblock a user, from the administration page or from a comment.
   \item \textbf{FR-8.4:} An administrator can delete a user account.
   \item \textbf{FR-8.5:} The administration page shows, for each source, the date of the last successful import and the last error.
+  \item \textbf{FR-8.6:} The system never adds a model automatically. When a source uses a model name that is not known, the administration page lists it, and the administrator links it to an existing model or creates the model with its lab. To create a lab, the administrator gives its name and drops its logo image (PNG, JPEG or WebP, 1\,MB maximum). The logo of a lab can be changed later. The scores of an unknown name are ignored until it is linked.
 \end{itemize}
 
 \subsection{Non-Functional Requirements}
@@ -213,7 +216,7 @@ The \product{} is a new, independent web application. It has a React frontend an
 \begin{itemize}
   \item \textbf{NFR-3:} Passwords must be hashed with bcrypt. They are never stored in clear text.
   \item \textbf{NFR-4:} All communications must use HTTPS.
-  \item \textbf{NFR-5:} The system must use role-based access control (visitor, user, admin) on every API route.
+  \item \textbf{NFR-5:} The system must use role-based access control (guest, user, admin) on every API route.
   \item \textbf{NFR-6:} All user inputs must be validated on the server side.
 \end{itemize}
 
@@ -246,7 +249,7 @@ The \product{} is a new, independent web application. It has a React frontend an
 
 \textbf{Description:} the user gives an opinion on a model by clicking on the up or down arrow on the model page.
 
-\textbf{Precondition:} the user is logged in and the account is active.
+\textbf{Precondition:} none. Logging in is only needed at step 3.
 
 \textbf{Steps:}
 \begin{enumerate}
@@ -258,7 +261,7 @@ The \product{} is a new, independent web application. It has a React frontend an
   \item The system shows the new score and the selected arrow.
 \end{enumerate}
 
-\textbf{Alternative flow:} at step 3, if the user is not logged in, the system shows ``Log in to vote''.
+\textbf{Alternative flows:} at step 3, if the user is not logged in, the system shows ``Log in to vote''. If the account has been blocked, the system refuses the vote and shows ``Your account is blocked''.
 
 \begin{figure}[H]
   \centering
@@ -272,13 +275,13 @@ The \product{} is a new, independent web application. It has a React frontend an
 
 \textbf{Description:} the user writes a comment in the feed of a model to discuss its performance.
 
-\textbf{Precondition:} the user is logged in and the account is active.
+\textbf{Precondition:} none. Logging in is only needed to send the comment.
 
 \textbf{Steps:}
 \begin{enumerate}
   \item The user opens the page of a model.
   \item The user writes a comment and clicks on ``Send''.
-  \item The system checks that the comment is not empty and has less than 1000 characters.
+  \item The system checks that the comment is not empty and has at most 1000 characters.
   \item The system saves the comment.
   \item The system shows the comment at the top of the feed.
 \end{enumerate}
@@ -295,7 +298,7 @@ The \product{} is a new, independent web application. It has a React frontend an
 
 \subsection{Class Diagram}
 
-The class diagram shows the main classes of the system, organized in five packages. \texttt{Vote} and \texttt{Score} are association classes: there is exactly one vote for each pair (user, model) and one score for each pair (model, benchmark). \texttt{Comment} is a normal class because a user can write many comments on the same model. The composition between \texttt{User} and \texttt{Comment} means that the comments are deleted with the account.
+The class diagram shows the main classes of the system, organized in five packages. \texttt{Vote} and \texttt{Score} are association classes: there is exactly one vote for each pair (user, model) and one score for each pair (model, benchmark). \texttt{Comment} is a normal class because a user can write many comments on the same model. The composition between \texttt{User} and \texttt{Comment} means that the comments are deleted with the account. \texttt{ModelAlias} stores the name that a source uses for a model: it can be linked to no model (0..1) while the administrator has not checked it.
 
 \begin{figure}[H]
   \centering
@@ -315,7 +318,7 @@ This diagram shows how the model page is loaded, including the case where the mo
 
 \subsection{Use Case Diagram}
 
-The Registered User inherits the use cases of the Visitor, and the Administrator inherits the use cases of the Registered User. Voting and commenting include logging in. ``Block author'' extends ``Delete any comment''.
+\texttt{Visitor} is an abstract actor for the use cases that everybody can do. \texttt{Guest} (a person without session) and \texttt{Registered User} inherit from it, and \texttt{Administrator} inherits from \texttt{Registered User}. This way, a registered user does not inherit ``Sign up'' and ``Log in''. Being logged in is a precondition of voting and commenting, not an included use case, because the user does not log in again for each vote. ``Block user'' can be used alone from the admin page, and it also extends ``Delete any comment'' (the admin can block the author while deleting a comment). ``Delete own comment'' and ``Delete any comment'' specialise ``Delete a comment''.
 
 \begin{figure}[H]
   \centering
@@ -338,8 +341,8 @@ The Registered User inherits the use cases of the Visitor, and the Administrator
   \texttt{/models/\{slug\}} & Public & Model details, benchmarks, votes, comments \\
   \texttt{/ranking} & Public & Community or benchmark ranking, with the other rank on each line \\
   \texttt{/news} & Public & AI news, newest first \\
-  \texttt{/account} & User & Username, email, ``Delete my account'' button \\
-  \texttt{/admin} & Admin & Users, recent comments, import status \\
+  \texttt{/account} & User & Opened with the ``Account'' button of the menu. Username, email, ``Delete my account'' button \\
+  \texttt{/admin} & Admin & No link in the interface (type the URL). Users, recent comments, import status, model names to link, lab logos \\
   \bottomrule
 \end{tabularx}
 \end{center}
@@ -383,14 +386,14 @@ The system does not use any special hardware. It works on any computer or phone 
 \begin{itemize}
   \item \textbf{Benchmark source API:} the backend calls a public API (REST, JSON) to get the benchmark scores.
   \item \textbf{AI news feed:} the backend reads a public RSS feed (XML) to get the news.
-  \item \textbf{PostgreSQL:} the backend stores all the data in a PostgreSQL database.
+  \item \textbf{Database:} the server stores all the data in a relational database.
 \end{itemize}
 
 \subsection{Communication Interfaces}
 
 \begin{itemize}
   \item The frontend and the backend communicate with a REST API over HTTPS, using JSON.
-  \item The user session is stored in a secure cookie (HttpOnly, Secure).
+  \item The user session is kept in a secure way that the code running in the browser cannot read (details in the SDD).
 \end{itemize}
 
 \section{Other Requirements}

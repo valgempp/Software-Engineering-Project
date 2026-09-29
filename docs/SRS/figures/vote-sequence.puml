@@ -2,31 +2,38 @@
 !include style.iuml
 hide footbox
 actor User
-participant "React App" as UI
-participant "Express API" as API
-database "PostgreSQL" as DB
+participant "Web App" as UI
+participant "Server" as API
+database "Database" as DB
 User -> UI ++ : click up or down arrow
 alt not logged in
   UI --> User : show "Log in to vote"
 else logged in
-  UI -> API ++ : POST /api/models/{slug}/vote {type}
-  API -> API : check session
-  API -> DB ++ : find vote (user, model)
-  return existing vote or null
-  alt no previous vote
-    API -> DB ++ : insert vote
-    return ok
-  else same type as before
-    API -> DB ++ : delete vote
-    return ok
-  else other type
-    API -> DB ++ : update vote type
-    return ok
+  UI -> API ++ : vote(slug, type)
+  API -> DB ++ : find user of the session
+  return user with status
+  alt account BLOCKED
+    API --> UI : error: account blocked, end session
+    UI --> User : show "Your account is blocked"
+  else account ACTIVE
+    API -> DB ++ : find vote (user, model)
+    return existing vote or null
+    alt no previous vote
+      API -> DB ++ : insert vote
+      return ok
+    else same type as before
+      API -> DB ++ : delete vote
+      return ok
+    else other type
+      API -> DB ++ : update vote type
+      return ok
+    end
+    API -> DB ++ : save new community\nscores and ranks
+    return new score and vote count
+    API --> UI : score, vote count, my vote
+    UI --> User : show new score and selected arrow
   end
-  API -> DB ++ : count up and down votes
-  return counts
-  return 200 {score, voteCount, myVote}
-  UI --> User : show new score and selected arrow
+  deactivate API
 end
 deactivate UI
 @enduml

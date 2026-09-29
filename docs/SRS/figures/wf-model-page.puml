@@ -1,6 +1,6 @@
 @startsalt
 {+
-  {* <b>AI Models Comparator | Models | Ranking | News | Log out }
+  {* <b>AI Models Comparator | Models | Ranking | News | Account | Log out }
   .
   { <b>GPT-5 | . | Lab: OpenAI | . | Released: 2025-08-07 }
   { Community rank: 3rd | . | Benchmark rank: 1st }
@@ -26,5 +26,6 @@
     <b>bob</b> - 1 h ago
     Better than the previous version.
   }
+  [Load more]
 }
 @endsalt
