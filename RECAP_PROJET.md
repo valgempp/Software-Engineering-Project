@@ -4,13 +4,37 @@ Software Engineering A4 (2026-2027). Sources : `../TP1/TP1.pdf`, `../TP2/TP2.pdf
 
 ## 1. Concept
 
-Application web de comparaison de modèles d'IA reposant sur deux classements et un espace de débat :
+Application web de comparaison de modèles d'IA. Chaque modèle est évalué de deux façons indépendantes : par l'avis de la communauté et par les résultats de benchmarks. Une page de débat accompagne chaque modèle.
 
-- **Classement communautaire** : les utilisateurs notent les modèles.
-- **Classement benchmarks** : scores récupérés automatiquement depuis des sources externes. Le système de classement (Elo ou autre) reste à décider.
-- **Commentaires** : chaque modèle a un espace de débat sur ses performances.
+### Fonctionnalités principales
+
+1. **Classement communautaire**
+   - Un utilisateur connecté attribue une note à un modèle selon son expérience.
+   - Chaque utilisateur a une seule note par modèle, qu'il peut modifier à tout moment.
+   - Les notes de tous les utilisateurs produisent le classement de la communauté.
+2. **Classement benchmarks**
+   - L'application récupère automatiquement les scores publiés par des sources externes.
+   - Ces scores produisent un second classement, objectif, distinct du classement communautaire.
+   - La méthode reste à choisir : agrégation de scores de benchmarks, Elo, ou les deux.
+3. **Section commentaires par modèle**
+   - Chaque modèle a un espace de débat sur ses performances.
+   - Un utilisateur peut publier autant de commentaires qu'il veut sur un modèle.
+
+L'intérêt de l'application est de confronter les deux classements : un modèle bien classé aux benchmarks convainc-t-il aussi les utilisateurs, et inversement ?
 
 **Stack imposée :** React (frontend) et Node.js/Express (backend).
+
+### Premier jet du diagramme de classes (tableau, 29/09)
+
+| Classe | Attributs notés | Liens |
+| --- | --- | --- |
+| `User` | — | Lié à `LLM Model` via `User Model Ranking` |
+| `LLM Model` | — | — |
+| `User Model Ranking` | `timestamp`, `comment`, `timestamp`, `value` | Classe d'association `User` * — * `LLM Model` |
+| `Model Benchmark` | `timestamp`, `value` | `*` → `LLM Model`, `*` → `Source` |
+| `Source` | — | — |
+
+Ce premier jet doit être revu : voir les questions ouvertes ci-dessous.
 
 ### Décisions prises
 
