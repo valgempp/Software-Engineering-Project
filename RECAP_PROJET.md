@@ -9,53 +9,170 @@ Application web de comparaison de modèles d'IA. Chaque modèle est évalué de 
 ### Fonctionnalités principales
 
 1. **Classement communautaire**
-   - Un utilisateur connecté attribue une note à un modèle selon son expérience.
-   - Chaque utilisateur a une seule note par modèle, qu'il peut modifier à tout moment.
-   - Les notes de tous les utilisateurs produisent le classement de la communauté.
+   - Un utilisateur connecté vote pour un modèle : up ou down, comme sur Reddit.
+   - Un seul vote par utilisateur et par modèle. Re-cliquer sur la flèche active retire le vote, cliquer sur l'autre flèche l'inverse.
+   - Score communautaire = % de votes up (up ÷ total). Un modèle n'est classé qu'à partir de **10 votes** ; en dessous, il affiche « Pas assez de votes ».
 2. **Classement benchmarks**
-   - L'application récupère automatiquement les scores publiés par des sources externes.
-   - Ces scores produisent un second classement, objectif, distinct du classement communautaire.
-   - La méthode reste à choisir : agrégation de scores de benchmarks, Elo, ou les deux.
-3. **Section commentaires par modèle**
-   - Chaque modèle a un espace de débat sur ses performances.
-   - Un utilisateur peut publier autant de commentaires qu'il veut sur un modèle.
+   - Le backend récupère automatiquement les scores publiés par des sources externes.
+   - Seuls les benchmarks exprimés en pourcentage de réussite (0–100) sont retenus, ce qui les rend comparables sans conversion.
+   - Score benchmarks d'un modèle = moyenne de ses scores disponibles. Un modèle n'est classé qu'à partir de **3 benchmarks** ; en dessous, il affiche « Pas assez de benchmarks ».
+3. **Commentaires par modèle**
+   - Chaque modèle a un fil de discussion unique, sans réponses, comme un groupe WhatsApp. Le plus récent est en haut, le champ de saisie au-dessus du fil.
+   - Un utilisateur peut publier autant de commentaires qu'il veut.
+4. **News**
+   - Actualités sur les nouveaux modèles d'IA, récupérées automatiquement et affichées telles quelles (titre, source, date, lien vers l'article).
+5. **Administration**
+   - L'admin supprime des commentaires, bloque ou débloque des utilisateurs, supprime des comptes et consulte l'état des imports.
 
 L'intérêt de l'application est de confronter les deux classements : un modèle bien classé aux benchmarks convainc-t-il aussi les utilisateurs, et inversement ?
 
 **Stack imposée :** React (frontend) et Node.js/Express (backend).
 
-### Premier jet du diagramme de classes (tableau, 29/09)
+### Acteurs
 
-| Classe | Attributs notés | Liens |
-| --- | --- | --- |
-| `User` | — | Lié à `LLM Model` via `User Model Ranking` |
-| `LLM Model` | — | — |
-| `User Model Ranking` | `timestamp`, `comment`, `timestamp`, `value` | Classe d'association `User` * — * `LLM Model` |
-| `Model Benchmark` | `timestamp`, `value` | `*` → `LLM Model`, `*` → `Source` |
-| `Source` | — | — |
-
-Ce premier jet doit être revu : voir les questions ouvertes ci-dessous.
-
-### Décisions prises
-
-| Sujet | Décision |
+| Acteur | Droits |
 | --- | --- |
-| Note | Une note par utilisateur et par modèle, modifiable |
-| Commentaires | Plusieurs commentaires par utilisateur et par modèle |
-| Comptes utilisateurs | Nécessaires (notes et commentaires sont rattachés à un utilisateur) |
+| Visiteur | Consulte toutes les pages publiques ; ne vote pas et ne commente pas |
+| Utilisateur | Hérite du visiteur ; vote, commente, supprime ses commentaires et son compte |
+| Admin | Hérite de l'utilisateur ; modère les commentaires et les comptes, consulte l'état des imports |
+| Sources externes | Fournissent les scores de benchmarks et les news |
+
+### Règles métier
+
+| Sujet | Règle |
+| --- | --- |
+| Vote | Un par couple (utilisateur, modèle), modifiable ; seule la dernière valeur est conservée (pas d'historique) |
+| Blocage | Un utilisateur bloqué ne peut plus se connecter ; ses votes et commentaires restent visibles ; l'admin peut le débloquer |
+| Suppression d'un compte | Par l'utilisateur ou l'admin : suppression totale de ses votes et commentaires (RGPD) |
+| Données personnelles | Seuls l'e-mail, le pseudo et le mot de passe haché sont stockés (RGPD : minimisation) |
+| Lab | Le créateur du modèle (Llama → Meta), pas l'hébergeur |
+| URL d'un modèle | Un slug généré à partir du nom : `GPT-4o (2024-08-06)` → `/models/gpt-4o-2024-08-06` |
+
+### Pages
+
+| Route | Accès | Contenu | Actions |
+| --- | --- | --- | --- |
+| `/` | Public | Titre de l'application, 3 boutons | Aller vers Models, Ranking, News |
+| `/login` | Public | Onglets Connexion / Inscription (e-mail, pseudo, mot de passe) ; case d'acceptation de la politique de confidentialité | Se connecter, créer un compte ; message spécifique si le compte est bloqué |
+| `/models` | Public | Mosaïque des labs (logo, nom) par ordre alphabétique ; sous chaque lab, ses modèles | Ouvrir la fiche d'un modèle |
+| `/models/:slug` | Public ; actions réservées aux connectés | En-tête : nom, lab, date de sortie. Rangs communauté et benchmarks. Tableau des benchmarks (benchmark, score, source). Score communautaire (% up, nombre de votes). Fil de commentaires | Voter up/down ; commenter ; supprimer ses commentaires. Admin : « Supprimer » et « Bloquer l'auteur » sur chaque commentaire. Visiteur : « Connecte-toi pour voter ou commenter » |
+| `/ranking` | Public | Classement ordonné ; chaque ligne : rang, modèle, lab, score, et rang dans l'autre classement. Modèles non classés listés en dessous | Bouton de bascule communauté / benchmarks ; ouvrir la fiche d'un modèle |
+| `/news` | Public | Liste des news, de la plus récente à la plus ancienne : titre, source, date | Ouvrir l'article d'origine |
+| `/account` | Connecté | Pseudo, e-mail | Supprimer son compte (avec confirmation) |
+| `/admin` | Admin | Utilisateurs (pseudo, e-mail, état) ; derniers commentaires ; état des imports par source (dernier succès, dernière erreur) | Bloquer, débloquer, supprimer un utilisateur ; supprimer un commentaire |
+
+États gérés sur toutes les pages : chargement, liste vide, erreur réseau, 404 (modèle inconnu), 403 (accès admin refusé). Interface responsive : les tableaux passent en cartes sur mobile.
+
+### Diagramme de classes
+
+```mermaid
+classDiagram
+    class Role {
+        <<enumeration>>
+        USER
+        ADMIN
+    }
+    class UserStatus {
+        <<enumeration>>
+        ACTIVE
+        BLOCKED
+    }
+    class VoteType {
+        <<enumeration>>
+        UP
+        DOWN
+    }
+    class SourceType {
+        <<enumeration>>
+        BENCHMARK
+        NEWS
+    }
+    class User {
+        id
+        email
+        pseudo
+        passwordHash
+        role: Role
+        status: UserStatus
+        createdAt
+    }
+    class Lab {
+        id
+        name
+        logoUrl
+    }
+    class LLMModel {
+        id
+        name
+        slug
+        releaseDate
+    }
+    class Vote {
+        type: VoteType
+        updatedAt
+    }
+    class Comment {
+        id
+        content
+        createdAt
+    }
+    class Benchmark {
+        id
+        name
+        description
+    }
+    class Score {
+        value
+        fetchedAt
+    }
+    class Source {
+        id
+        name
+        url
+        type: SourceType
+        lastSuccessAt
+        lastError
+    }
+    class News {
+        id
+        title
+        url
+        publishedAt
+    }
+
+    Lab "1" -- "1..*" LLMModel : crée
+    User "0..*" -- "0..*" LLMModel : vote
+    User "1" *-- "0..*" Comment : écrit
+    LLMModel "1" -- "0..*" Comment : concerne
+    LLMModel "0..*" -- "0..*" Benchmark : évalué sur
+    Score "0..*" -- "1" Source : provient de
+    News "0..*" -- "1" Source : provient de
+```
+
+Mermaid ne sait pas dessiner les classes d'association : `Vote` porte sur le lien User — LLMModel, `Score` sur le lien LLMModel — Benchmark. Dans draw.io ou StarUML, les dessiner avec une ligne pointillée vers l'association.
+
+Justifications :
+
+- **`Vote` est une classe d'association** : exactement un vote par couple (utilisateur, modèle). **`Comment` n'en est pas une** : plusieurs commentaires par couple, d'où une classe ordinaire avec deux associations.
+- **Composition User ◆— Comment** : supprimer un compte supprime ses commentaires (règle RGPD). Un composant n'a qu'un seul composite, d'où une association simple avec `LLMModel`.
+- **`Score` est une classe d'association** : un score par couple (modèle, benchmark). Le nom du benchmark n'est stocké qu'une fois, dans `Benchmark`.
+- **Quatre énumérations** : `Role`, `UserStatus`, `VoteType`, `SourceType` (le TP1 en exige au moins une).
+
+### Diagramme d'états : compte utilisateur
+
+```mermaid
+stateDiagram-v2
+    [*] --> Active : register()
+    Active --> Blocked : block() [admin]
+    Blocked --> Active : unblock() [admin]
+    Active --> [*] : deleteAccount() [utilisateur ou admin]
+    Blocked --> [*] : deleteAccount() [admin]
+```
 
 ### Questions ouvertes
 
-- [ ] Note modifiée : conserve-t-on l'historique ou seulement la dernière valeur ?
-- [ ] Note et commentaire : une seule classe ou deux ? Laquelle est une classe d'association ?
-- [ ] Réponses aux commentaires : un seul niveau ou un fil sans limite ? Comment le modéliser en UML ?
-- [ ] Benchmark : où ranger son nom, son échelle et son sens (« plus haut = mieux ») ?
-- [ ] Score de benchmark : quelle structure entre modèle et benchmark ?
-- [ ] Classement communautaire : moyenne simple ou méthode tenant compte du nombre de votes ?
-- [ ] Vote : note absolue (étoiles) ou duels entre modèles (Elo) ?
-- [ ] Modération : qui modère les commentaires ? Quels sont les acteurs du système ?
-- [ ] Sources de benchmarks : lesquelles ? Accès API, licence, attribution ?
-- [ ] Multiplicités de toutes les associations
+- [ ] Sources de benchmarks : lesquelles ? Accès API, licence, attribution, benchmarks en %
+- [ ] Source des news : quelle API ou quel flux RSS (gratuit, clé nécessaire) ?
 
 ## 2. Sprint 1 : documents à rendre (TP2)
 
