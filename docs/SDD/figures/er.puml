@@ -1,0 +1,86 @@
+@startuml
+!include style.iuml
+skinparam EntityBackgroundColor #FFFFFF
+skinparam EntityBorderColor #2E86C1
+hide circle
+skinparam linetype ortho
+entity users {
+  * id : SERIAL <<PK>>
+  --
+  * email : VARCHAR(255) <<UNIQUE>>
+  * username : VARCHAR(30) <<UNIQUE>>
+  * password_hash : VARCHAR(255)
+  * role : VARCHAR(10)
+  * status : VARCHAR(10)
+  * created_at : TIMESTAMP
+}
+entity labs {
+  * id : SERIAL <<PK>>
+  --
+  * name : VARCHAR(100) <<UNIQUE>>
+  logo_url : TEXT
+}
+entity models {
+  * id : SERIAL <<PK>>
+  --
+  * lab_id : INT <<FK>>
+  * name : VARCHAR(100)
+  * slug : VARCHAR(120) <<UNIQUE>>
+  release_date : DATE
+}
+entity votes {
+  * user_id : INT <<PK, FK>>
+  * model_id : INT <<PK, FK>>
+  --
+  * type : VARCHAR(4)
+  * updated_at : TIMESTAMP
+}
+entity comments {
+  * id : SERIAL <<PK>>
+  --
+  * user_id : INT <<FK>>
+  * model_id : INT <<FK>>
+  * content : VARCHAR(1000)
+  * created_at : TIMESTAMP
+}
+entity benchmarks {
+  * id : SERIAL <<PK>>
+  --
+  * name : VARCHAR(100) <<UNIQUE>>
+  description : TEXT
+}
+entity scores {
+  * model_id : INT <<PK, FK>>
+  * benchmark_id : INT <<PK, FK>>
+  --
+  * source_id : INT <<FK>>
+  * value : NUMERIC(5,2)
+  * fetched_at : TIMESTAMP
+}
+entity sources {
+  * id : SERIAL <<PK>>
+  --
+  * name : VARCHAR(100)
+  * url : TEXT
+  * type : VARCHAR(10)
+  last_success_at : TIMESTAMP
+  last_error : TEXT
+}
+entity news {
+  * id : SERIAL <<PK>>
+  --
+  * source_id : INT <<FK>>
+  * title : TEXT
+  * url : TEXT <<UNIQUE>>
+  * published_at : TIMESTAMP
+}
+labs ||--|{ models
+users ||--o{ votes
+models ||--o{ votes
+users ||--o{ comments
+models ||--o{ comments
+models ||--o{ scores
+benchmarks ||--o{ scores
+sources ||--o{ scores
+sources ||--o{ news
+@enduml

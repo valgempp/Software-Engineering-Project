@@ -1,0 +1,17 @@
+@startuml
+!include style.iuml
+skinparam StateBackgroundColor #D6EAF8
+skinparam StateBorderColor #2E86C1
+title User Account
+[*] --> Active : register() / create account
+state Active {
+  [*] --> LoggedOut
+  LoggedOut --> LoggedIn : login() [valid password]
+  LoggedIn --> LoggedOut : logout() or session expired
+}
+Active --> Blocked : block() [by admin] / end sessions
+Blocked --> Active : unblock() [by admin]
+Blocked : entry / refuse every login
+Active --> [*] : deleteAccount() / delete votes and comments
+Blocked --> [*] : deleteAccount() [by admin] / delete votes and comments
+@enduml

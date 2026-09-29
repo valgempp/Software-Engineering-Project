@@ -1,0 +1,30 @@
+@startsalt
+{+
+  {* <b>AI Models Comparator | Models | Ranking | News | Log out }
+  .
+  { <b>GPT-5 | . | Lab: OpenAI | . | Released: 2025-08-07 }
+  { Community rank: 3rd | . | Benchmark rank: 1st }
+  .
+  <b>Benchmarks
+  {#
+    <b>Benchmark | <b>Score | <b>Source
+    GPQA | 85.7 % | Source A
+    MMLU-Pro | 87.1 % | Source A
+    LiveCodeBench | 74.9 % | Source B
+  }
+  .
+  <b>Community
+  { [ ▲ ] | 82 % up (1 204 votes) | [ ▼ ] }
+  .
+  <b>Comments
+  {+
+    "Write a comment...                    " | [Send]
+  }
+  {
+    <b>alice</b> - 2 min ago | [Delete]
+    Great for code, a bit slow.
+    <b>bob</b> - 1 h ago
+    Better than the previous version.
+  }
+}
+@endsalt

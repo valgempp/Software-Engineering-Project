@@ -1,0 +1,101 @@
+@startuml
+!include style.iuml
+skinparam ClassBackgroundColor #FFFFFF
+skinparam ClassBorderColor #2E86C1
+skinparam PackageBorderColor #555555
+hide circle
+skinparam classAttributeIconSize 0
+package Users {
+  enum Role <<enumeration>> {
+    USER
+    ADMIN
+  }
+  enum UserStatus <<enumeration>> {
+    ACTIVE
+    BLOCKED
+  }
+  class User {
+    - id : int
+    - email : String
+    - username : String
+    - passwordHash : String
+    - role : Role
+    - status : UserStatus
+    - createdAt : DateTime
+    + register()
+    + login()
+    + deleteAccount()
+  }
+}
+package Catalog {
+  class Lab {
+    - id : int
+    - name : String
+    - logoUrl : String
+  }
+  class LLMModel {
+    - id : int
+    - name : String
+    - slug : String
+    - releaseDate : Date
+    + getCommunityScore() : float
+    + getBenchmarkScore() : float
+  }
+}
+package Community {
+  enum VoteType <<enumeration>> {
+    UP
+    DOWN
+  }
+  class Vote {
+    - type : VoteType
+    - updatedAt : DateTime
+  }
+  class Comment {
+    - id : int
+    - content : String
+    - createdAt : DateTime
+  }
+}
+package Benchmarks {
+  class Benchmark {
+    - id : int
+    - name : String
+    - description : String
+  }
+  class Score {
+    - value : float
+    - fetchedAt : DateTime
+  }
+}
+package Sources {
+  enum SourceType <<enumeration>> {
+    BENCHMARK
+    NEWS
+  }
+  class Source {
+    - id : int
+    - name : String
+    - url : String
+    - type : SourceType
+    - lastSuccessAt : DateTime
+    - lastError : String
+    + runImport()
+  }
+  class News {
+    - id : int
+    - title : String
+    - url : String
+    - publishedAt : DateTime
+  }
+}
+Lab "1" -- "1..*" LLMModel : creates >
+User "0..*" -- "0..*" LLMModel : votes for >
+(User, LLMModel) .. Vote
+User "1" *-- "0..*" Comment : writes >
+LLMModel "1" -- "0..*" Comment : is about <
+LLMModel "0..*" -- "0..*" Benchmark : is tested on >
+(LLMModel, Benchmark) .. Score
+Score "0..*" --> "1" Source : comes from >
+News "0..*" --> "1" Source : comes from >
+@enduml

@@ -1,0 +1,38 @@
+@startuml
+!include style.iuml
+skinparam NodeBackgroundColor #F4F6F7
+skinparam NodeBorderColor #555555
+skinparam ArtifactBackgroundColor #D6EAF8
+skinparam ArtifactBorderColor #2E86C1
+node "Client Device" <<device>> {
+  node "Web Browser" <<execution environment>> {
+    artifact "React SPA\n(HTML, CSS, JS)" as SPA
+  }
+}
+node "Web Server" <<device>> {
+  node "Nginx" <<execution environment>> {
+    artifact "Static files\n(build of the SPA)" as Static
+    component "Reverse Proxy" as Proxy
+  }
+}
+node "Application Server" <<device>> {
+  node "Node.js 22" <<execution environment>> {
+    artifact "api.js\n(Express)" as API
+    artifact "import-jobs.js\n(node-cron)" as Jobs
+  }
+}
+node "Database Server" <<device>> {
+  database "PostgreSQL 17" as DB
+}
+node "External Services" <<device>> {
+  component "Benchmark Source API" as BS
+  component "AI News RSS Feed" as NS
+}
+SPA --> Static : <<HTTPS>>
+SPA --> Proxy : <<HTTPS>>\n/api/*
+Proxy --> API : <<HTTP>>
+API --> DB : <<TCP/IP>>\nSQL
+Jobs --> DB : <<TCP/IP>>\nSQL
+Jobs --> BS : <<HTTPS>>\nREST / JSON
+Jobs --> NS : <<HTTPS>>\nRSS / XML
+@enduml

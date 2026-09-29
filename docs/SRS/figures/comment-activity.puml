@@ -1,0 +1,20 @@
+@startuml
+!include style.iuml
+title Comment on a Model
+start
+:Open model page;
+if () then ([not logged in])
+  :Show "Log in to comment";
+  :Go to login page;
+  stop
+else ([logged in])
+endif
+repeat
+  :Write comment;
+  :Click "Send";
+repeat while () is ([comment empty or too long])
+->[valid];
+:Save comment;
+:Show comment at the top of the feed;
+stop
+@enduml

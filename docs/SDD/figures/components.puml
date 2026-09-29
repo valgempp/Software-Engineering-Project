@@ -1,0 +1,44 @@
+@startuml
+!include style.iuml
+skinparam ComponentBackgroundColor #D6EAF8
+skinparam ComponentBorderColor #2E86C1
+skinparam PackageBorderColor #555555
+skinparam linetype ortho
+package "Frontend (React SPA)" {
+  component Pages
+  component "API Client" as Client
+}
+package "Backend (Node.js / Express)" {
+  component "REST Routes" as Routes
+  package "Services" {
+    component AuthService
+    component ModelService
+    component VoteService
+    component CommentService
+    component NewsService
+    component AdminService
+    component RankingService
+    component ImportService
+  }
+  component Scheduler
+  component "Data Access\n(Prisma ORM)" as DAL
+}
+database PostgreSQL as DB
+cloud "External Sources\n(Benchmark API, News RSS)" as Ext
+Pages --> Client
+Client --> Routes : HTTPS / JSON
+Routes --> AuthService
+Routes --> ModelService
+Routes --> VoteService
+Routes --> CommentService
+Routes --> NewsService
+Routes --> AdminService
+ModelService --> RankingService
+VoteService --> RankingService
+Scheduler --> ImportService
+AdminService --> ImportService
+ImportService --> RankingService
+Services --> DAL
+DAL --> DB : SQL
+ImportService --> Ext : HTTPS
+@enduml

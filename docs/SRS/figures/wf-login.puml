@@ -1,0 +1,16 @@
+@startsalt
+{+
+  {* <b>AI Models Comparator | Models | Ranking | News | Log in }
+  .
+  { [Log in] | [Sign up] }
+  .
+  {
+    Email | "alice@mail.com      "
+    Username | "alice               "
+    Password | "****                "
+    [X] I accept the privacy policy
+  }
+  .
+  [Create account]
+}
+@endsalt

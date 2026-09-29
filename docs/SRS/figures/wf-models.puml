@@ -1,0 +1,16 @@
+@startsalt
+{+
+  {* <b>AI Models Comparator | Models | Ranking | News | Log in }
+  .
+  <b>Models
+  .
+  {#
+    <&image> <b>Anthropic | <&image> <b>Google | <&image> <b>Meta
+    Claude Opus | Gemini Pro | Llama 4
+    Claude Sonnet | Gemini Flash | Llama 3.3
+    <&image> <b>Mistral | <&image> <b>OpenAI | <&image> <b>xAI
+    Mistral Large | GPT-5 | Grok 4
+    Codestral | GPT-4o | Grok 3
+  }
+}
+@endsalt

@@ -1,0 +1,343 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{fancyhdr}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\product}{AI Models Comparator}
+\newcommand{\team}{Vivien Gruel \\ Noé Wales \\ Valentin Gempp \\ Maxence Tessier}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\product}
+\fancyhead[R]{Software Design Description}
+\fancyfoot[C]{\thepage}
+
+\setlength{\emergencystretch}{3em}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{4cm}
+  {\Huge\bfseries \MakeUppercase{\product}\par}
+  \vspace{1.5cm}
+  {\LARGE Software Design Description (SDD)\par}
+  \vspace{4cm}
+  {\large Software Engineering -- A4 -- 2026-2027\par}
+  \vspace{1cm}
+  {\large \team\par}
+  \vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+\textbf{Purpose.} This document explains \textbf{how} the \product{} will be built. It describes the architecture, the data, the interfaces and the main technical choices, so that the developers can implement the system and the testers can check it.
+
+\textbf{Scope.} The \product{} is a responsive web application. It shows AI models grouped by lab, a benchmark ranking, a community ranking based on up and down votes, a comment feed for each model, AI news, and an administration page.
+
+\textbf{Audience.} Developers, testers and the TD instructor.
+
+\textbf{References.} IEEE 1016-2009 (SDD), Business Requirements Document (BRD) and Software Requirements Specification (SRS) of the \product{}, SHMS SDD template given in the course.
+
+\section{System Overview}
+
+The \product{} is a classic three-tier web application:
+\begin{itemize}
+  \item a \textbf{frontend} in React, which runs in the browser of the user;
+  \item a \textbf{backend} in Node.js with Express, which contains the business logic and exposes a REST API;
+  \item a \textbf{PostgreSQL database}, which stores all the data.
+\end{itemize}
+
+The backend also runs scheduled jobs that import benchmark scores and AI news from external websites. The users never call these websites directly: they only read the data saved in our database. This way, the website still works when an external website is down.
+
+\section{Architectural Views}
+
+\subsection{Context View}
+
+The system is between the human actors (visitors, registered users, administrators) and two kinds of external systems (benchmark source and news feed).
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/context.png}
+  \caption{Context diagram}
+\end{figure}
+
+\textbf{Main interactions:}
+\begin{itemize}
+  \item \textbf{Visitors $\leftrightarrow$ system:} browse models, rankings and news, sign up, log in.
+  \item \textbf{Registered users $\leftrightarrow$ system:} vote, comment, delete their comments and their account.
+  \item \textbf{Administrators $\leftrightarrow$ system:} delete comments, block, unblock and delete users, check the imports.
+  \item \textbf{System $\rightarrow$ benchmark source:} get the benchmark scores (REST, JSON).
+  \item \textbf{System $\rightarrow$ news feed:} get the latest news (RSS, XML).
+\end{itemize}
+
+\subsection{Component View}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth]{figures/components.png}
+  \caption{Component diagram}
+\end{figure}
+
+\textbf{Components:}
+\begin{itemize}
+  \item \textbf{Pages} (frontend): one React component for each page of the SRS.
+  \item \textbf{API Client} (frontend): sends the HTTP requests to the backend.
+  \item \textbf{REST Routes}: receive the requests, check the session and the role, validate the inputs, and call the right service.
+  \item \textbf{AuthService}: sign up, log in, log out, session management.
+  \item \textbf{ModelService}: labs, models and model details.
+  \item \textbf{VoteService}: add, change and remove votes.
+  \item \textbf{CommentService}: add, list and delete comments.
+  \item \textbf{RankingService}: computes the community and benchmark scores and the ranks.
+  \item \textbf{NewsService}: lists the news.
+  \item \textbf{AdminService}: moderation of comments and users, import status.
+  \item \textbf{ImportService}: downloads, checks and saves the data from the external sources.
+  \item \textbf{Scheduler}: starts the imports at fixed times (node-cron).
+  \item \textbf{Data Access}: Prisma ORM, the only component that talks to the database.
+\end{itemize}
+
+\textbf{Main dependencies:} all services use the Data Access layer. VoteService, ModelService and ImportService use RankingService. The Scheduler and AdminService start the ImportService.
+
+\subsection{Deployment View}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{figures/deployment.png}
+  \caption{Deployment diagram}
+\end{figure}
+
+\begin{itemize}
+  \item \textbf{Client device:} the React SPA runs in the web browser of the user (computer or phone).
+  \item \textbf{Web server:} Nginx serves the static files of the SPA and forwards the \texttt{/api/*} requests to the application server. HTTPS is enabled with a Let's Encrypt certificate.
+  \item \textbf{Application server:} Node.js 22 runs the Express API and the import jobs.
+  \item \textbf{Database server:} PostgreSQL 17, saved every day.
+  \item \textbf{External services:} benchmark source API and AI news RSS feed, called only by the import jobs.
+\end{itemize}
+
+For the course, the web server, the application server and the database can run on the same machine with Docker Compose (one container for each).
+
+\section{Data Design}
+
+\textbf{Main tables:}
+\begin{itemize}
+  \item \texttt{users}(id, email, username, password\_hash, role, status, created\_at)
+  \item \texttt{labs}(id, name, logo\_url)
+  \item \texttt{models}(id, lab\_id, name, slug, release\_date)
+  \item \texttt{votes}(user\_id, model\_id, type, updated\_at)
+  \item \texttt{comments}(id, user\_id, model\_id, content, created\_at)
+  \item \texttt{benchmarks}(id, name, description)
+  \item \texttt{scores}(model\_id, benchmark\_id, source\_id, value, fetched\_at)
+  \item \texttt{sources}(id, name, url, type, last\_success\_at, last\_error)
+  \item \texttt{news}(id, source\_id, title, url, published\_at)
+\end{itemize}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.7\textheight,keepaspectratio]{figures/er.png}
+  \caption{Entity-relationship diagram}
+\end{figure}
+
+\textbf{Integrity rules:}
+\begin{itemize}
+  \item The primary key of \texttt{votes} is (\texttt{user\_id}, \texttt{model\_id}): a user can only have one vote per model.
+  \item The primary key of \texttt{scores} is (\texttt{model\_id}, \texttt{benchmark\_id}): a model has only one score per benchmark.
+  \item \texttt{votes.type} is \texttt{UP} or \texttt{DOWN}; \texttt{users.role} is \texttt{USER} or \texttt{ADMIN}; \texttt{users.status} is \texttt{ACTIVE} or \texttt{BLOCKED} (CHECK constraints).
+  \item \texttt{scores.value} is between 0 and 100.
+  \item \texttt{email}, \texttt{username} and \texttt{models.slug} are unique.
+  \item When a user is deleted, their votes and comments are deleted too (\texttt{ON DELETE CASCADE}).
+  \item A lab or a model cannot be deleted if it still has models, votes, comments or scores (\texttt{ON DELETE RESTRICT}).
+\end{itemize}
+
+\section{Interface Design}
+
+\subsection{REST API}
+
+All routes start with \texttt{/api}, use JSON, and return standard HTTP codes.
+
+\begin{center}
+\small
+\begin{tabularx}{\textwidth}{llXl}
+  \toprule
+  \textbf{Method} & \textbf{Route} & \textbf{Description} & \textbf{Access} \\
+  \midrule
+  POST & \texttt{/auth/register} & Create an account & Public \\
+  POST & \texttt{/auth/login} & Log in, set the session cookie & Public \\
+  POST & \texttt{/auth/logout} & Log out & User \\
+  GET & \texttt{/auth/me} & Current user & User \\
+  DELETE & \texttt{/users/me} & Delete my account & User \\
+  GET & \texttt{/labs} & Labs with their models & Public \\
+  GET & \texttt{/models/\{slug\}} & Model details, scores, ranks, votes & Public \\
+  GET & \texttt{/rankings?type=community|benchmark} & Ranking & Public \\
+  POST & \texttt{/models/\{slug\}/vote} & Add, change or remove my vote & User \\
+  GET & \texttt{/models/\{slug\}/comments} & Comments, newest first & Public \\
+  POST & \texttt{/models/\{slug\}/comments} & Add a comment & User \\
+  DELETE & \texttt{/comments/\{id\}} & Delete a comment (own, or any for admin) & User \\
+  GET & \texttt{/news} & AI news, newest first & Public \\
+  GET & \texttt{/admin/users} & List of users & Admin \\
+  PATCH & \texttt{/admin/users/\{id\}} & Block or unblock a user & Admin \\
+  DELETE & \texttt{/admin/users/\{id\}} & Delete a user & Admin \\
+  GET & \texttt{/admin/comments} & Recent comments & Admin \\
+  GET & \texttt{/admin/sources} & Import status of each source & Admin \\
+  \bottomrule
+\end{tabularx}
+\end{center}
+
+\textbf{Example:} \texttt{POST /api/models/gpt-5/vote} with \texttt{\{"type": "UP"\}} returns \texttt{200} with \texttt{\{"score": 82.4, "voteCount": 1204, "myVote": "UP"\}}.
+
+\subsection{User Interface}
+
+\begin{itemize}
+  \item \textbf{Public pages:} home, models, model page, ranking, news, login.
+  \item \textbf{User pages:} account page; vote and comment forms on the model page.
+  \item \textbf{Admin page:} users, recent comments, import status.
+\end{itemize}
+
+The wireframes are in the SRS (Section 6.1). The interface is built with Tailwind CSS and is responsive (mobile first).
+
+\section{Detailed Design}
+
+\subsection{Component Responsibilities}
+
+\begin{itemize}
+  \item \textbf{VoteService}
+  \begin{itemize}
+    \item Finds the existing vote of the user for the model.
+    \item No vote: creates it. Same type: deletes it. Other type: updates it.
+    \item Asks RankingService for the new community score.
+  \end{itemize}
+  \item \textbf{RankingService}
+  \begin{itemize}
+    \item Community score $=$ up / (up $+$ down) $\times$ 100, only if the model has at least 10 votes.
+    \item Benchmark score $=$ average of the scores, only if the model has at least 3 scores.
+    \item Sorts the models by score; in case of equality, the model with more votes (or scores) comes first.
+  \end{itemize}
+  \item \textbf{ImportService}
+  \begin{itemize}
+    \item One importer for each source, with the same interface: \texttt{fetch()}, \texttt{validate()}, \texttt{save()}.
+    \item Validates the data with Zod before saving it.
+    \item Saves everything in one transaction: if something fails, nothing is changed.
+  \end{itemize}
+  \item \textbf{AuthService}
+  \begin{itemize}
+    \item Hashes the passwords with bcrypt.
+    \item Creates a JWT stored in an HttpOnly cookie (valid 7 days).
+    \item Refuses the login if the account is \texttt{BLOCKED}.
+  \end{itemize}
+\end{itemize}
+
+\subsection{Sequence -- Benchmark Import}
+
+\begin{enumerate}
+  \item Every day at 3:00, the Scheduler starts the benchmark import.
+  \item For each benchmark source, ImportService calls the external API.
+  \item If the data is valid, ImportService saves all the scores in one transaction. Unknown models are added to the catalogue.
+  \item If there is an error, the old scores are kept and the error is saved in the \texttt{sources} table.
+  \item At the end, the benchmark ranking is computed again.
+\end{enumerate}
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=\textwidth,height=0.65\textheight,keepaspectratio]{figures/import-sequence.png}
+  \caption{Sequence diagram -- Benchmark import}
+\end{figure}
+
+\subsection{State Machine -- User Account}
+
+A user account is \texttt{ACTIVE} after sign up. Inside this state, the user is logged in or logged out. An administrator can block the account: all sessions end and the user cannot log in anymore. The account can be unblocked, or deleted.
+
+\begin{figure}[H]
+  \centering
+  \includegraphics[width=0.85\textwidth,height=0.6\textheight,keepaspectratio]{figures/account-state.png}
+  \caption{State machine diagram -- User account}
+\end{figure}
+
+\subsection{Error Handling and Recovery}
+
+\begin{itemize}
+  \item \textbf{400} for invalid data (for example an empty comment), with a clear message.
+  \item \textbf{401} if the user is not logged in, \textbf{403} if the user does not have the right role or is blocked.
+  \item \textbf{404} if the model, the comment or the user does not exist.
+  \item \textbf{409} if the email or the username is already used.
+  \item \textbf{500} for unexpected errors: a global Express error handler returns a generic message and logs the details.
+  \item Import errors never stop the website: the last valid data is kept.
+\end{itemize}
+
+\section{Security and Compliance}
+
+\begin{itemize}
+  \item Passwords hashed with bcrypt; JWT in an HttpOnly, Secure, SameSite cookie.
+  \item Role-based access control (visitor, user, admin) checked on every route by an Express middleware.
+  \item HTTPS everywhere; security headers with Helmet; CORS limited to our frontend.
+  \item Input validation with Zod; SQL injection avoided thanks to Prisma (parameterised queries).
+  \item Comments are displayed as plain text by React, which protects against XSS.
+  \item Rate limiting on login and sign up to limit brute-force attacks and fake accounts.
+  \item \textbf{GDPR:} only email, username and hashed password are stored; consent at sign up; account deletion removes all personal data, votes and comments.
+\end{itemize}
+
+\section{Performance, Scalability, Availability}
+
+\begin{itemize}
+  \item Rankings are computed after each import or vote and not at each page view.
+  \item Database indexes on \texttt{models.slug}, \texttt{votes.model\_id}, \texttt{comments.model\_id} and \texttt{scores.model\_id}.
+  \item Comments are loaded by pages of 20.
+  \item The API is stateless (JWT), so more Node.js instances can be added behind Nginx if needed.
+  \item Target: less than 2 seconds for each page with 100 users at the same time.
+\end{itemize}
+
+\section{Observability}
+
+\begin{itemize}
+  \item JSON logs for each request (method, route, status, duration) with the library Pino.
+  \item Each import saves its result in the \texttt{sources} table (last success, last error), visible on the admin page.
+  \item A \texttt{GET /api/health} route checks that the API and the database work.
+\end{itemize}
+
+\section{Internationalization and Accessibility}
+
+\begin{itemize}
+  \item The interface is in English at the start. All the texts are in one file, so another language can be added later.
+  \item Dates are displayed in the format of the browser.
+  \item Accessibility: labels on all form fields, keyboard navigation, good color contrast, and information never given only by color (for example, the selected vote arrow also changes its shape).
+\end{itemize}
+
+\section{Design Rationale}
+
+\begin{itemize}
+  \item \textbf{React + Node.js/Express:} required by the course, and the same language (JavaScript/TypeScript) on the frontend and the backend.
+  \item \textbf{PostgreSQL:} relational data with strong constraints (one vote per user and model, cascade delete), which is important for our rules.
+  \item \textbf{Prisma:} simple ORM, safe queries and database migrations.
+  \item \textbf{Imports saved in our database:} the website is faster and still works when an external source is down.
+  \item \textbf{One service per feature:} the team can work in parallel, and a change in one feature does not break the others.
+\end{itemize}
+
+\section{Assumptions and Constraints}
+
+\begin{itemize}
+  \item Web application only; no native mobile app.
+  \item The external sources are free and allow programmatic access.
+  \item Team of four students, with the time of the course sprints.
+  \item Hosting on one small server (or on the computers of the team for the demo).
+\end{itemize}
+
+\section{Open Issues and Future Work}
+
+\begin{itemize}
+  \item Final choice of the benchmark source and of the news feed.
+  \item Automatic matching of model names between sources (today, a simple name comparison).
+  \item Detection of fake accounts and vote manipulation.
+  \item Replies to comments and reports of bad comments by the users.
+  \item History of the rankings over time.
+\end{itemize}
+
+\end{document}

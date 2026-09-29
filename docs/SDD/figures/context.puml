@@ -1,0 +1,17 @@
+@startuml
+!include style.iuml
+skinparam ComponentBackgroundColor #D6EAF8
+skinparam ComponentBorderColor #2E86C1
+left to right direction
+actor Visitor
+actor "Registered User" as User
+actor Administrator as Admin
+component "AI Models Comparator" as App
+cloud "Benchmark Source API" as BS
+cloud "AI News RSS Feed" as NS
+Visitor --> App : browse models,\nrankings, news
+User --> App : vote, comment
+Admin --> App : moderate,\ncheck imports
+App --> BS : GET scores\n(REST / JSON)
+App --> NS : GET articles\n(RSS / XML)
+@enduml

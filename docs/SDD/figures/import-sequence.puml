@@ -1,0 +1,33 @@
+@startuml
+!include style.iuml
+hide footbox
+participant "Scheduler\n(node-cron)" as Cron
+participant ImportService as IS
+participant "Benchmark\nSource API" as BS
+database PostgreSQL as DB
+Cron -> IS ++ : runBenchmarkImport()
+IS -> DB ++ : get BENCHMARK sources
+return sources
+loop for each source
+  IS -> BS ++ : GET /scores
+  return JSON or error
+  alt response is valid
+    IS -> DB ++ : BEGIN transaction
+    loop for each score
+      IS -> IS : find model by name
+      opt model not in catalogue
+        IS -> DB : insert model and lab
+      end
+      IS -> DB : upsert score (model, benchmark)
+    end
+    IS -> DB : set last_success_at = now()
+    IS -> DB : COMMIT
+    deactivate DB
+  else error or invalid data
+    IS -> DB ++ : set last_error, keep old scores
+    return ok
+  end
+end
+IS -> IS : recompute benchmark ranking
+return done
+@enduml

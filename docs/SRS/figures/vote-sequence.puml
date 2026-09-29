@@ -1,0 +1,32 @@
+@startuml
+!include style.iuml
+hide footbox
+actor User
+participant "React App" as UI
+participant "Express API" as API
+database "PostgreSQL" as DB
+User -> UI ++ : click up or down arrow
+alt not logged in
+  UI --> User : show "Log in to vote"
+else logged in
+  UI -> API ++ : POST /api/models/{slug}/vote {type}
+  API -> API : check session
+  API -> DB ++ : find vote (user, model)
+  return existing vote or null
+  alt no previous vote
+    API -> DB ++ : insert vote
+    return ok
+  else same type as before
+    API -> DB ++ : delete vote
+    return ok
+  else other type
+    API -> DB ++ : update vote type
+    return ok
+  end
+  API -> DB ++ : count up and down votes
+  return counts
+  return 200 {score, voteCount, myVote}
+  UI --> User : show new score and selected arrow
+end
+deactivate UI
+@enduml
