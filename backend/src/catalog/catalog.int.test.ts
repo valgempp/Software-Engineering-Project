@@ -70,6 +70,21 @@ describe('catalogue on PostgreSQL', () => {
     expect(await countRows()).toEqual(first);
   });
 
+  it('rejects an invalid score before writing anything', async () => {
+    const before = await countRows();
+    const invalid = [
+      {
+        lab: 'Aurora Demo Lab',
+        name: 'Invalid Score Model (demo)',
+        releaseDate: null,
+        scores: [{ benchmark: 'Demo Coding Set', value: 100.5 }],
+      },
+    ];
+
+    await expect(seedDemoData(dataSource, invalid)).rejects.toThrow(RangeError);
+    expect(await countRows()).toEqual(before);
+  });
+
   it('leaves the aggregated scores and ranks empty', async () => {
     const models = await dataSource.getRepository(LLMModel).find();
 

@@ -137,31 +137,24 @@ function ModelDetails({ model }: { model: ModelDetail }) {
   );
 }
 
+// Only an answer of our API about this slug means "not found": a network failure,
+// or a 404 page from a proxy, is shown as a loading error that can be retried.
+function isModelNotFound(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    error.apiMessage !== null &&
+    (error.status === 404 || error.status === 400)
+  );
+}
+
 function ModelContent({ slug }: { slug: string }) {
   const [state, retry] = useApi<ModelDetail>(
     `/models/${encodeURIComponent(slug)}`,
   );
 
-  if (state.status === 'loading') {
-    return <Loading label="Loading model…" />;
+  if (state.status === 'error' && isModelNotFound(state.error)) {
+    return <NotFoundPage title="Model not found" />;
   }
-  if (state.status === 'error') {
-    // 400 (malformed slug) and 404 both mean that no model has this URL.
-    if (
-      state.error instanceof ApiError &&
-      (state.error.status === 404 || state.error.status === 400)
-    ) {
-      return <NotFoundPage title="Model not found" />;
-    }
-    return (
-      <LoadError message="The model could not be loaded." onRetry={retry} />
-    );
-  }
-  return <ModelDetails model={state.data} />;
-}
-
-export default function ModelPage() {
-  const { slug = '' } = useParams();
 
   return (
     <>
@@ -171,7 +164,17 @@ export default function ModelPage() {
       >
         ← All models
       </Link>
-      <ModelContent key={slug} slug={slug} />
+      {state.status === 'loading' && <Loading label="Loading model…" />}
+      {state.status === 'error' && (
+        <LoadError message="The model could not be loaded." onRetry={retry} />
+      )}
+      {state.status === 'success' && <ModelDetails model={state.data} />}
     </>
   );
+}
+
+export default function ModelPage() {
+  const { slug = '' } = useParams();
+
+  return <ModelContent key={slug} slug={slug} />;
 }

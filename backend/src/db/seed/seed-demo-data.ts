@@ -6,6 +6,7 @@ import type {
   FindOptionsWhere,
   ObjectLiteral,
 } from 'typeorm';
+import { assertPercentage } from '../../catalog/percentage.js';
 import { slugify } from '../../catalog/slug.js';
 import {
   Benchmark,
@@ -21,13 +22,8 @@ import {
   demoLabs,
   demoModels,
   demoSource,
+  type DemoModel,
 } from './demo-data.js';
-
-function assertPercentage(value: number): void {
-  if (!(value >= 0 && value <= 100)) {
-    throw new Error(`Score ${value} is not a percentage between 0 and 100`);
-  }
-}
 
 // Not `manager.upsert`: on conflict it also rewrites the generated id, which breaks the foreign keys.
 async function saveBy<T extends ObjectLiteral>(
@@ -42,7 +38,15 @@ async function saveBy<T extends ObjectLiteral>(
 }
 
 // Idempotent: every row is matched on its natural key, so running it again updates instead of duplicating.
-export async function seedDemoData(dataSource: DataSource): Promise<void> {
+export async function seedDemoData(
+  dataSource: DataSource,
+  models: DemoModel[] = demoModels,
+): Promise<void> {
+  // Every score is checked before the first write.
+  for (const { value } of models.flatMap((model) => model.scores)) {
+    assertPercentage(value);
+  }
+
   await dataSource.transaction(async (manager) => {
     const source = await saveBy(
       manager,
@@ -69,7 +73,7 @@ export async function seedDemoData(dataSource: DataSource): Promise<void> {
       );
     }
 
-    for (const { lab, scores, ...values } of demoModels) {
+    for (const { lab, scores, ...values } of models) {
       const slug = slugify(values.name);
       const model = await saveBy(
         manager,
@@ -79,7 +83,6 @@ export async function seedDemoData(dataSource: DataSource): Promise<void> {
       );
 
       for (const score of scores) {
-        assertPercentage(score.value);
         // The composite primary key (model, benchmark) lets `save` update an existing score.
         await manager.save(Score, {
           modelId: model.id,

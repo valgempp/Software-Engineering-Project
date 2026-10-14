@@ -1,6 +1,6 @@
 import type { ModelDetail } from '@aimc/shared';
 import { fireEvent, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderAt, stubFetch } from '../test-utils';
 
 const fetchedAt = '2026-10-01T09:00:00.000Z';
@@ -79,6 +79,20 @@ describe('/models/:slug', () => {
     expect(screen.queryByText('Not ranked')).toBeNull();
   });
 
+  // Fixture only: no ranking is computed yet, so the real API still returns null ranks.
+  it('shows a non-null benchmark rank under its own label', async () => {
+    stubFetch({ body: { ...model, benchmarkRank: 3 } });
+    renderAt('/models/aurora-lumen-2-demo');
+    await screen.findByRole('heading', { level: 1 });
+
+    expect(
+      screen.getByText('Benchmark rank').nextElementSibling?.textContent,
+    ).toBe('#3');
+    expect(
+      screen.getByText('Community rank').nextElementSibling?.textContent,
+    ).toBe('Not ranked');
+  });
+
   it('handles a model without release date nor benchmark results', async () => {
     stubFetch({ body: { ...model, releaseDate: null, benchmarks: [] } });
     renderAt('/models/aurora-lumen-2-demo');
@@ -98,17 +112,59 @@ describe('/models/:slug', () => {
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
-  it.each([404, 400])(
-    'shows "Model not found" when the API answers %i',
-    async (status) => {
-      stubFetch({ status, body: { error: 'Model not found' } });
+  it.each([
+    [404, 'Model not found'],
+    [400, 'Invalid model slug'],
+  ])(
+    'shows "Model not found" with a single way back when the API answers %i',
+    async (status, error) => {
+      stubFetch({ status, body: { error } });
       renderAt('/models/unknown-model');
 
       expect(
         (await screen.findByRole('heading', { level: 1 })).textContent,
       ).toBe('Model not found');
+      expect(
+        screen
+          .getByRole('link', { name: 'Back to the models' })
+          .getAttribute('href'),
+      ).toBe('/models');
+      expect(screen.queryByRole('link', { name: /All models/ })).toBeNull();
     },
   );
+
+  it('shows a network failure as a loading error, not as a missing model', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))),
+    );
+    renderAt('/models/aurora-lumen-2-demo');
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'The model could not be loaded.',
+    );
+    expect(screen.queryByText('Model not found')).toBeNull();
+  });
+
+  it('shows a 404 that does not come from the API as a loading error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() =>
+        Promise.resolve(
+          new Response('<h1>Not Found</h1>', {
+            status: 404,
+            headers: { 'Content-Type': 'text/html' },
+          }),
+        ),
+      ),
+    );
+    renderAt('/models/aurora-lumen-2-demo');
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'The model could not be loaded.',
+    );
+    expect(screen.queryByText('Model not found')).toBeNull();
+  });
 
   it('shows an error with a retry button for other failures', async () => {
     const fetchMock = stubFetch(

@@ -29,7 +29,14 @@ export const demoLabs = [
   },
 ];
 
-export const demoModels = [
+export interface DemoModel {
+  lab: string;
+  name: string;
+  releaseDate: string | null;
+  scores: { benchmark: string; value: number }[];
+}
+
+export const demoModels: DemoModel[] = [
   {
     lab: 'Aurora Demo Lab',
     name: 'Aurora Lumen 2 (demo)',

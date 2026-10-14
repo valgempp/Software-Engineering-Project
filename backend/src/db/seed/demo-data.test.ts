@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { assertPercentage } from '../../catalog/percentage.js';
 import { slugify } from '../../catalog/slug.js';
 import {
   demoBenchmarks,
@@ -10,8 +11,7 @@ import {
 describe('demo data', () => {
   it('only contains percentages between 0 and 100', () => {
     for (const { value } of demoModels.flatMap((m) => m.scores)) {
-      expect(value).toBeGreaterThanOrEqual(0);
-      expect(value).toBeLessThanOrEqual(100);
+      expect(() => assertPercentage(value)).not.toThrow();
     }
   });
 

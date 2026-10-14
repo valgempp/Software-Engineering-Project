@@ -1,6 +1,6 @@
 import type { LabsResponse, ModelDetail } from '@aimc/shared';
 import { fireEvent, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderAt, stubFetch } from '../test-utils';
 
 const labs: LabsResponse = {
@@ -90,6 +90,19 @@ describe('/models', () => {
 
     expect(await screen.findByText('Aurora Demo Lab')).toBeTruthy();
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows a network failure as a loading error', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))),
+    );
+    renderAt('/models');
+
+    expect((await screen.findByRole('alert')).textContent).toContain(
+      'The labs could not be loaded.',
+    );
+    expect(screen.queryByText('No labs available yet')).toBeNull();
   });
 
   it('opens the model page when a model is clicked', async () => {
