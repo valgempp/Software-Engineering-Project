@@ -7,7 +7,17 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['**/dist/', '**/coverage/', 'docs/']),
+  globalIgnores([
+    'eslint.config.mjs',
+    '**/dist/',
+    '**/coverage/',
+    'docs/',
+    'lab4/',
+    'frontend/src/api/generated/',
+    'js-practice.js',
+    'hospitalData.js',
+    'main.js',
+  ]),
   js.configs.recommended,
   tseslint.configs.recommendedTypeChecked,
   {

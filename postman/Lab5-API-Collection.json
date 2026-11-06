@@ -1,0 +1,146 @@
+{
+  "info": {
+    "name": "AI Models Comparator - Lab 5",
+    "_postman_id": "a348d9b0-2e94-48a1-a835-998aa0a1f005",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET Model Suggestions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response is an array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Create Suggestion",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"GPT-6\", \"provider\": \"OpenAI\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Suggestion created\", () => {",
+              "  const data = pm.response.json();",
+              "  pm.expect(data.id).to.be.a(\"number\");",
+              "  pm.expect(data.name).to.eql(\"GPT-6\");",
+              "  pm.expect(data.provider).to.eql(\"OpenAI\");",
+              "  pm.collectionVariables.set(\"createdSuggestionId\", data.id);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET Updated Suggestions",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Created suggestion exists\", () => {",
+              "  const id = Number(pm.collectionVariables.get(\"createdSuggestionId\"));",
+              "  const suggestions = pm.response.json();",
+              "  pm.expect(suggestions).to.be.an(\"array\");",
+              "  pm.expect(suggestions).to.deep.include({",
+              "    id, name: \"GPT-6\", provider: \"OpenAI\"",
+              "  });",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Invalid Suggestion",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"Invalid Model\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Error returned\", () => pm.expect(pm.response.json()).to.have.property(\"error\"));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
