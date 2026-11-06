@@ -32,6 +32,8 @@ jobs:
 
       # 4) Lint
       - name: Lint
+        env:
+          ESLINT_USE_FLAT_CONFIG: 'false'
         run: npm run lint
 
       # 5) Test with coverage
