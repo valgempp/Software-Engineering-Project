@@ -31,7 +31,10 @@ describe('/models', () => {
       'Aurora Demo Lab',
       'Borealis Demo Lab',
     ]);
-    expect(fetchMock).toHaveBeenCalledWith('/api/labs', expect.anything());
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const request = fetchMock.mock.calls[0]?.[0] as Request;
+    expect(new URL(request.url).pathname).toBe('/api/labs');
+    expect(request.method).toBe('GET');
   });
 
   it('shows the logo of a lab, or its initial when it has none', async () => {

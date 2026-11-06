@@ -2,3 +2,9 @@ docs/
 RECAP_PROJET.md
 CLAUDE.md
 package-lock.json
+
+lab4/
+
+frontend/src/api/generated/
+
+.github/workflows/lab4-ci.yml

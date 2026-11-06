@@ -30,10 +30,12 @@ describe('/models/:slug', () => {
     expect((await screen.findByRole('heading', { level: 1 })).textContent).toBe(
       'Aurora Lumen 2 (demo)',
     );
-    expect(fetchMock).toHaveBeenCalledWith(
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const request = fetchMock.mock.calls[0]?.[0] as Request;
+    expect(new URL(request.url).pathname).toBe(
       '/api/models/aurora-lumen-2-demo',
-      expect.anything(),
     );
+    expect(request.method).toBe('GET');
     expect(screen.getByText('Aurora Demo Lab')).toBeTruthy();
     expect(
       document.querySelector('time[datetime="2026-03-12"]'),
