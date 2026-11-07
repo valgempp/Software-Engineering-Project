@@ -19,6 +19,9 @@
     },
     {
       "name": "Suggestions"
+    },
+    {
+      "name": "Benchmarks"
     }
   ],
   "paths": {
@@ -178,6 +181,75 @@
           }
         }
       }
+    },
+    "/api/benchmarks": {
+      "get": {
+        "tags": ["Benchmarks"],
+        "operationId": "listBenchmarks",
+        "summary": "List model benchmark scores",
+        "responses": {
+          "200": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BenchmarkScore"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Benchmarks"],
+        "operationId": "createBenchmark",
+        "summary": "Create a model benchmark score",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BenchmarkScoreInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkScore"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "HTTP 400",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "HTTP 404",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -221,6 +293,67 @@
             "maxLength": 100
           },
           "provider": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "BenchmarkScore": {
+        "type": "object",
+        "required": ["modelSlug", "benchmarkName", "score", "unit", "source"],
+        "properties": {
+          "modelSlug": {
+            "type": "string",
+            "example": "aurora-lumen-2-demo"
+          },
+          "benchmarkName": {
+            "type": "string",
+            "example": "Demo Reasoning Set"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 71.4
+          },
+          "unit": {
+            "type": "string",
+            "example": "%"
+          },
+          "source": {
+            "type": "string",
+            "nullable": true,
+            "example": "Demo dataset (fictional)"
+          }
+        }
+      },
+      "BenchmarkScoreInput": {
+        "type": "object",
+        "required": ["modelSlug", "benchmarkName", "score"],
+        "additionalProperties": false,
+        "properties": {
+          "modelSlug": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "benchmarkName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "source": {
             "type": "string",
             "minLength": 1,
             "maxLength": 100

@@ -141,6 +141,105 @@
           }
         }
       ]
+    },
+    {
+      "name": "GET Benchmarks",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/benchmarks"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Response is an array\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Create Benchmark Score",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/benchmarks",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"modelSlug\": \"aurora-lumen-2-demo\", \"benchmarkName\": \"Demo Reasoning Set\", \"score\": 71.4, \"unit\": \"%\", \"source\": \"Demo dataset (fictional)\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Benchmark score created\", () => {",
+              "  const data = pm.response.json();",
+              "  pm.expect(data.modelSlug).to.eql(\"aurora-lumen-2-demo\");",
+              "  pm.expect(data.benchmarkName).to.eql(\"Demo Reasoning Set\");",
+              "  pm.expect(data.score).to.eql(71.4);",
+              "  pm.expect(data.unit).to.eql(\"%\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Invalid Benchmark Score",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/benchmarks",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"modelSlug\": \"aurora-lumen-2-demo\", \"benchmarkName\": \"Demo Reasoning Set\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Error returned\", () => pm.expect(pm.response.json()).to.have.property(\"error\"));"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

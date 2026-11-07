@@ -1,3 +1,5 @@
+import type { BenchmarkStore } from './benchmarks/benchmark-store.js';
+import { benchmarksRouter } from './benchmarks/benchmarks-routes.js';
 import type { SuggestionStore } from './suggestions/suggestion-store.js';
 import swaggerUi from 'swagger-ui-express';
 import { readFileSync } from 'node:fs';
@@ -15,11 +17,13 @@ import { errorHandler, notFoundHandler } from './errors.js';
 export interface AppDependencies {
   catalog: Catalog;
   suggestions?: SuggestionStore;
+  benchmarks?: BenchmarkStore;
 }
 
 export function createApp({
   catalog,
   suggestions,
+  benchmarks,
 }: AppDependencies): express.Express {
   const app = express();
 
@@ -34,6 +38,9 @@ export function createApp({
   app.use('/api', catalogRouter(catalog));
   if (suggestions) {
     app.use('/api/model-suggestions', suggestionsRouter(suggestions));
+  }
+  if (benchmarks) {
+    app.use('/api/benchmarks', benchmarksRouter(benchmarks));
   }
 
   app.get('/api/openapi.json', (_req, res) => {

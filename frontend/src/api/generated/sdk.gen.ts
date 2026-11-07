@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, ListModelSuggestionsData, ListModelSuggestionsResponses } from './types.gen.js';
+import type { CreateBenchmarkData, CreateBenchmarkErrors, CreateBenchmarkResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, ListBenchmarksData, ListBenchmarksResponses, ListModelSuggestionsData, ListModelSuggestionsResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -43,6 +43,23 @@ export const listModelSuggestions = <ThrowOnError extends boolean = false>(optio
  */
 export const createModelSuggestion = <ThrowOnError extends boolean = false>(options: Options<CreateModelSuggestionData, ThrowOnError>): RequestResult<CreateModelSuggestionResponses, CreateModelSuggestionErrors, ThrowOnError> => (options.client ?? client).post<CreateModelSuggestionResponses, CreateModelSuggestionErrors, ThrowOnError>({
     url: '/api/model-suggestions',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List model benchmark scores
+ */
+export const listBenchmarks = <ThrowOnError extends boolean = false>(options?: Options<ListBenchmarksData, ThrowOnError>): RequestResult<ListBenchmarksResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListBenchmarksResponses, unknown, ThrowOnError>({ url: '/api/benchmarks', ...options });
+
+/**
+ * Create a model benchmark score
+ */
+export const createBenchmark = <ThrowOnError extends boolean = false>(options: Options<CreateBenchmarkData, ThrowOnError>): RequestResult<CreateBenchmarkResponses, CreateBenchmarkErrors, ThrowOnError> => (options.client ?? client).post<CreateBenchmarkResponses, CreateBenchmarkErrors, ThrowOnError>({
+    url: '/api/benchmarks',
     ...options,
     headers: {
         'Content-Type': 'application/json',

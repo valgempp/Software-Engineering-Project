@@ -1,3 +1,4 @@
+import { TypeOrmBenchmarkStore } from './benchmarks/benchmark-store.js';
 import { ModelSuggestion } from './entities/ModelSuggestion.js';
 import { TypeOrmSuggestionStore } from './suggestions/suggestion-store.js';
 import { createApp } from './app.js';
@@ -14,6 +15,7 @@ createApp({
   suggestions: new TypeOrmSuggestionStore(
     dataSource.getRepository(ModelSuggestion),
   ),
+  benchmarks: new TypeOrmBenchmarkStore(dataSource),
 }).listen(port, () => {
   console.log(`API listening on http://localhost:${port}`);
 });

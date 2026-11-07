@@ -19,6 +19,22 @@ export type SuggestionInput = {
     provider: string;
 };
 
+export type BenchmarkScore = {
+    modelSlug: string;
+    benchmarkName: string;
+    score: number;
+    unit: string;
+    source: string | null;
+};
+
+export type BenchmarkScoreInput = {
+    modelSlug: string;
+    benchmarkName: string;
+    score: number;
+    unit?: string;
+    source?: string;
+};
+
 export type Error = {
     error: string;
 };
@@ -132,3 +148,48 @@ export type CreateModelSuggestionResponses = {
 };
 
 export type CreateModelSuggestionResponse = CreateModelSuggestionResponses[keyof CreateModelSuggestionResponses];
+
+export type ListBenchmarksData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/benchmarks';
+};
+
+export type ListBenchmarksResponses = {
+    /**
+     * Successful response
+     */
+    200: Array<BenchmarkScore>;
+};
+
+export type ListBenchmarksResponse = ListBenchmarksResponses[keyof ListBenchmarksResponses];
+
+export type CreateBenchmarkData = {
+    body: BenchmarkScoreInput;
+    path?: never;
+    query?: never;
+    url: '/api/benchmarks';
+};
+
+export type CreateBenchmarkErrors = {
+    /**
+     * HTTP 400
+     */
+    400: Error;
+    /**
+     * HTTP 404
+     */
+    404: Error;
+};
+
+export type CreateBenchmarkError = CreateBenchmarkErrors[keyof CreateBenchmarkErrors];
+
+export type CreateBenchmarkResponses = {
+    /**
+     * Successful response
+     */
+    201: BenchmarkScore;
+};
+
+export type CreateBenchmarkResponse = CreateBenchmarkResponses[keyof CreateBenchmarkResponses];
