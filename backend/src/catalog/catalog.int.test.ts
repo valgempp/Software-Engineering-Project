@@ -1,4 +1,4 @@
-import type { LabsResponse } from '@aimc/shared';
+import type { CatalogModel, LabsResponse } from '@aimc/shared';
 import {
   PostgreSqlContainer,
   type StartedPostgreSqlContainer,
@@ -165,6 +165,49 @@ describe('catalogue on PostgreSQL', () => {
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Model not found' });
+  });
+
+  it('GET /api/models lists the models by name, filtered by lab', async () => {
+    const all = await api().get('/api/models');
+    const borealis = await api().get('/api/models?lab=Borealis Demo Lab');
+
+    expect(all.status).toBe(200);
+    const allModels = all.body as CatalogModel[];
+    expect(allModels.map((model) => model.slug)).toEqual([
+      'aurora-atlas-demo',
+      'aurora-lumen-2-demo',
+      'borealis-drift-demo',
+      'borealis-ember-demo',
+    ]);
+    expect(allModels[0]).toMatchObject({ lab: 'Aurora Demo Lab' });
+    expect(
+      (borealis.body as CatalogModel[]).map((model) => model.slug),
+    ).toEqual(['borealis-drift-demo', 'borealis-ember-demo']);
+  });
+
+  it('POST /api/models stores the model in its lab', async () => {
+    const created = await api().post('/api/models').send({
+      name: 'Cirrus Nimbus (demo)',
+      slug: 'cirrus-nimbus-demo',
+      lab: 'Cirrus Demo Lab',
+      releaseDate: '2026-09-01',
+    });
+    const detail = await api().get('/api/models/cirrus-nimbus-demo');
+    const unknownLab = await api().post('/api/models').send({
+      name: 'Ghost (demo)',
+      slug: 'ghost-demo',
+      lab: 'Ghost Lab',
+    });
+
+    expect(created.status).toBe(201);
+    expect(detail.body).toMatchObject({
+      releaseDate: '2026-09-01',
+      lab: { name: 'Cirrus Demo Lab' },
+    });
+    expect(unknownLab.status).toBe(404);
+    expect(
+      await dataSource.getRepository(LLMModel).existsBy({ slug: 'ghost-demo' }),
+    ).toBe(false);
   });
 
   it('refuses to delete a lab that still has models', async () => {

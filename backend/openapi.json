@@ -70,6 +70,90 @@
         }
       }
     },
+    "/api/models": {
+      "get": {
+        "tags": ["Catalog"],
+        "operationId": "listModels",
+        "summary": "List the AI models of the catalogue, optionally for one lab",
+        "parameters": [
+          {
+            "name": "lab",
+            "in": "query",
+            "required": false,
+            "description": "Exact lab name; an unknown lab gives an empty list",
+            "schema": { "type": "string", "minLength": 1, "maxLength": 100 }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Models sorted by name",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/CatalogModel" }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Empty lab filter",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Catalog"],
+        "operationId": "createModel",
+        "summary": "Add an AI model to an existing lab",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/NewModelInput" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Model created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/CatalogModel" }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing required fields",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "404": {
+            "description": "Lab not found",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          },
+          "409": {
+            "description": "Model slug already exists",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Error" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/models/{slug}": {
       "get": {
         "tags": ["Catalog"],
@@ -224,6 +308,38 @@
             "type": "string",
             "minLength": 1,
             "maxLength": 100
+          }
+        }
+      },
+      "CatalogModel": {
+        "type": "object",
+        "required": ["name", "slug", "lab", "releaseDate"],
+        "properties": {
+          "name": { "type": "string" },
+          "slug": { "type": "string" },
+          "lab": { "type": "string" },
+          "releaseDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "NewModelInput": {
+        "type": "object",
+        "required": ["name", "slug", "lab"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "slug": {
+            "type": "string",
+            "maxLength": 120,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "lab": { "type": "string", "minLength": 1, "maxLength": 100 },
+          "releaseDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
           }
         }
       },

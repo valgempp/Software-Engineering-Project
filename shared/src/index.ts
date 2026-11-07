@@ -23,6 +23,21 @@ export interface LabsResponse {
   labs: LabSummary[];
 }
 
+export interface CatalogModel {
+  name: string;
+  slug: string;
+  lab: string;
+  /** ISO 8601 date (YYYY-MM-DD), or null when unknown. */
+  releaseDate: string | null;
+}
+
+export interface NewModelInput {
+  name: string;
+  slug: string;
+  lab: string;
+  releaseDate?: string | null;
+}
+
 export interface BenchmarkResult {
   benchmark: string;
   value: number;

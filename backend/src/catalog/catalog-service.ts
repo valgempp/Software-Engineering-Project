@@ -1,10 +1,19 @@
-import type { LabSummary, ModelDetail } from '@aimc/shared';
+import type {
+  CatalogModel,
+  LabSummary,
+  ModelDetail,
+  NewModelInput,
+} from '@aimc/shared';
 import type { DataSource } from 'typeorm';
 import { Lab, LLMModel } from '../entities/index.js';
 
 export interface Catalog {
   listLabs(): Promise<LabSummary[]>;
   findModel(slug: string): Promise<ModelDetail | null>;
+  listModels(lab?: string): Promise<CatalogModel[]>;
+  modelExists(slug: string): Promise<boolean>;
+  /** Resolves to null when the lab does not exist: a model is never created without its lab. */
+  createModel(input: NewModelInput): Promise<CatalogModel | null>;
 }
 
 // Sorted in code rather than by PostgreSQL: the result does not depend on the database collation.
@@ -28,6 +37,39 @@ export class CatalogService implements Catalog {
       logoUrl: lab.logoUrl,
       models: lab.models.sort(byName).map(({ name, slug }) => ({ name, slug })),
     }));
+  }
+
+  async listModels(lab?: string): Promise<CatalogModel[]> {
+    const models = await this.dataSource.getRepository(LLMModel).find({
+      where: lab ? { lab: { name: lab } } : {},
+      relations: { lab: true },
+    });
+
+    return models.sort(byName).map(toCatalogModel);
+  }
+
+  modelExists(slug: string): Promise<boolean> {
+    return this.dataSource.getRepository(LLMModel).existsBy({ slug });
+  }
+
+  async createModel(input: NewModelInput): Promise<CatalogModel | null> {
+    const lab = await this.dataSource
+      .getRepository(Lab)
+      .findOneBy({ name: input.lab });
+    if (!lab) {
+      return null;
+    }
+
+    const repo = this.dataSource.getRepository(LLMModel);
+    const model = await repo.save(
+      repo.create({
+        name: input.name,
+        slug: input.slug,
+        releaseDate: input.releaseDate ?? null,
+        lab,
+      }),
+    );
+    return toCatalogModel(model);
   }
 
   async findModel(slug: string): Promise<ModelDetail | null> {
@@ -58,4 +100,13 @@ export class CatalogService implements Catalog {
         .sort((a, b) => collator.compare(a.benchmark, b.benchmark)),
     };
   }
+}
+
+function toCatalogModel(model: LLMModel): CatalogModel {
+  return {
+    name: model.name,
+    slug: model.slug,
+    lab: model.lab.name,
+    releaseDate: model.releaseDate,
+  };
 }

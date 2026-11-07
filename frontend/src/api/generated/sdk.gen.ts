@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, ListModelSuggestionsData, ListModelSuggestionsResponses } from './types.gen.js';
+import type { CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -27,6 +27,23 @@ export const getHealth = <ThrowOnError extends boolean = false>(options?: Option
  * List available benchmark labs
  */
 export const getLabs = <ThrowOnError extends boolean = false>(options?: Options<GetLabsData, ThrowOnError>): RequestResult<GetLabsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetLabsResponses, unknown, ThrowOnError>({ url: '/api/labs', ...options });
+
+/**
+ * List the AI models of the catalogue, optionally for one lab
+ */
+export const listModels = <ThrowOnError extends boolean = false>(options?: Options<ListModelsData, ThrowOnError>): RequestResult<ListModelsResponses, ListModelsErrors, ThrowOnError> => (options?.client ?? client).get<ListModelsResponses, ListModelsErrors, ThrowOnError>({ url: '/api/models', ...options });
+
+/**
+ * Add an AI model to an existing lab
+ */
+export const createModel = <ThrowOnError extends boolean = false>(options: Options<CreateModelData, ThrowOnError>): RequestResult<CreateModelResponses, CreateModelErrors, ThrowOnError> => (options.client ?? client).post<CreateModelResponses, CreateModelErrors, ThrowOnError>({
+    url: '/api/models',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * Get an AI model by its slug
