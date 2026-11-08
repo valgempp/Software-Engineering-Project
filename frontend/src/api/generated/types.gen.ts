@@ -19,6 +19,20 @@ export type SuggestionInput = {
     provider: string;
 };
 
+export type CatalogModel = {
+    name: string;
+    slug: string;
+    lab: string;
+    releaseDate: string | null;
+};
+
+export type NewModelInput = {
+    name: string;
+    slug: string;
+    lab: string;
+    releaseDate?: string | null;
+};
+
 export type Error = {
     error: string;
 };
@@ -58,6 +72,69 @@ export type GetLabsResponses = {
 };
 
 export type GetLabsResponse = GetLabsResponses[keyof GetLabsResponses];
+
+export type ListModelsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Exact lab name; an unknown lab gives an empty list
+         */
+        lab?: string;
+    };
+    url: '/api/models';
+};
+
+export type ListModelsErrors = {
+    /**
+     * Empty lab filter
+     */
+    400: Error;
+};
+
+export type ListModelsError = ListModelsErrors[keyof ListModelsErrors];
+
+export type ListModelsResponses = {
+    /**
+     * Models sorted by name
+     */
+    200: Array<CatalogModel>;
+};
+
+export type ListModelsResponse = ListModelsResponses[keyof ListModelsResponses];
+
+export type CreateModelData = {
+    body: NewModelInput;
+    path?: never;
+    query?: never;
+    url: '/api/models';
+};
+
+export type CreateModelErrors = {
+    /**
+     * Invalid or missing required fields
+     */
+    400: Error;
+    /**
+     * Lab not found
+     */
+    404: Error;
+    /**
+     * Model slug already exists
+     */
+    409: Error;
+};
+
+export type CreateModelError = CreateModelErrors[keyof CreateModelErrors];
+
+export type CreateModelResponses = {
+    /**
+     * Model created
+     */
+    201: CatalogModel;
+};
+
+export type CreateModelResponse = CreateModelResponses[keyof CreateModelResponses];
 
 export type GetModelBySlugData = {
     body?: never;

@@ -16,7 +16,7 @@ Not implemented yet: rankings computation, accounts, votes, comments, news, admi
 npm workspaces, all in TypeScript:
 
 - `backend/` — Node.js + Express 5, TypeORM + PostgreSQL
-  (`GET /api/health`, `GET /api/labs`, `GET /api/models/:slug`)
+  (`GET /api/health`, `GET /api/labs`, `GET/POST /api/models`, `GET /api/models/:slug`)
 - `frontend/` — React + Vite + React Router + Tailwind CSS
 - `shared/` — types shared by the backend and the frontend (no runtime code)
 
