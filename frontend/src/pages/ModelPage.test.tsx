@@ -61,7 +61,7 @@ describe('/models/:slug', () => {
     expect(rows).toHaveLength(2);
     const first = within(rows[0] as HTMLElement);
     expect(first.getByText('Demo Coding Set')).toBeTruthy();
-    expect(first.getByText('64.25 %')).toBeTruthy();
+    expect(first.getByText(/64[.,]25 %/)).toBeTruthy();
     const link = first.getByRole('link', { name: source.name });
     expect(link.getAttribute('href')).toBe(source.url);
     expect(link.getAttribute('target')).toBe('_blank');
