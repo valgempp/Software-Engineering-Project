@@ -33,6 +33,29 @@ export type NewModelInput = {
     releaseDate?: string | null;
 };
 
+export type BenchmarkEntry = {
+    id: string;
+    modelSlug: string;
+    benchmarkName: string;
+    score: number;
+    unit: string;
+    source: string | null;
+};
+
+export type BenchmarkInput = {
+    modelSlug: string;
+    benchmarkName: string;
+    score: number;
+    unit?: string;
+    source?: string;
+};
+
+export type BenchmarkUpdateInput = {
+    score: number;
+    unit?: string;
+    source?: string;
+};
+
 export type Error = {
     error: string;
 };
@@ -351,3 +374,150 @@ export type UpdateModelSuggestionResponses = {
 };
 
 export type UpdateModelSuggestionResponse = UpdateModelSuggestionResponses[keyof UpdateModelSuggestionResponses];
+
+export type ListBenchmarksData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/benchmarks';
+};
+
+export type ListBenchmarksResponses = {
+    /**
+     * List of benchmark scores
+     */
+    200: Array<BenchmarkEntry>;
+};
+
+export type ListBenchmarksResponse = ListBenchmarksResponses[keyof ListBenchmarksResponses];
+
+export type CreateBenchmarkData = {
+    body: BenchmarkInput;
+    path?: never;
+    query?: never;
+    url: '/api/benchmarks';
+};
+
+export type CreateBenchmarkErrors = {
+    /**
+     * Invalid or missing required fields
+     */
+    400: Error;
+    /**
+     * Model not found
+     */
+    404: Error;
+};
+
+export type CreateBenchmarkError = CreateBenchmarkErrors[keyof CreateBenchmarkErrors];
+
+export type CreateBenchmarkResponses = {
+    /**
+     * Benchmark score created
+     */
+    201: BenchmarkEntry;
+};
+
+export type CreateBenchmarkResponse = CreateBenchmarkResponses[keyof CreateBenchmarkResponses];
+
+export type DeleteBenchmarkData = {
+    body?: never;
+    path: {
+        /**
+         * Composite benchmark score ID formatted as <modelId>-<benchmarkId>
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/benchmarks/{id}';
+};
+
+export type DeleteBenchmarkErrors = {
+    /**
+     * Invalid ID
+     */
+    400: Error;
+    /**
+     * Benchmark not found
+     */
+    404: Error;
+};
+
+export type DeleteBenchmarkError = DeleteBenchmarkErrors[keyof DeleteBenchmarkErrors];
+
+export type DeleteBenchmarkResponses = {
+    /**
+     * Benchmark score deleted
+     */
+    204: void;
+};
+
+export type DeleteBenchmarkResponse = DeleteBenchmarkResponses[keyof DeleteBenchmarkResponses];
+
+export type GetBenchmarkByIdData = {
+    body?: never;
+    path: {
+        /**
+         * Composite benchmark score ID formatted as <modelId>-<benchmarkId>
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/benchmarks/{id}';
+};
+
+export type GetBenchmarkByIdErrors = {
+    /**
+     * Invalid ID
+     */
+    400: Error;
+    /**
+     * Benchmark not found
+     */
+    404: Error;
+};
+
+export type GetBenchmarkByIdError = GetBenchmarkByIdErrors[keyof GetBenchmarkByIdErrors];
+
+export type GetBenchmarkByIdResponses = {
+    /**
+     * Benchmark score found
+     */
+    200: BenchmarkEntry;
+};
+
+export type GetBenchmarkByIdResponse = GetBenchmarkByIdResponses[keyof GetBenchmarkByIdResponses];
+
+export type UpdateBenchmarkData = {
+    body: BenchmarkUpdateInput;
+    path: {
+        /**
+         * Composite benchmark score ID formatted as <modelId>-<benchmarkId>
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/api/benchmarks/{id}';
+};
+
+export type UpdateBenchmarkErrors = {
+    /**
+     * Invalid ID or fields
+     */
+    400: Error;
+    /**
+     * Benchmark not found
+     */
+    404: Error;
+};
+
+export type UpdateBenchmarkError = UpdateBenchmarkErrors[keyof UpdateBenchmarkErrors];
+
+export type UpdateBenchmarkResponses = {
+    /**
+     * Benchmark score updated
+     */
+    200: BenchmarkEntry;
+};
+
+export type UpdateBenchmarkResponse = UpdateBenchmarkResponses[keyof UpdateBenchmarkResponses];

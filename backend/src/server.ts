@@ -1,3 +1,4 @@
+import { TypeOrmBenchmarkStore } from './benchmarks/benchmark-store.js';
 import { ModelSuggestion } from './entities/ModelSuggestion.js';
 import { TypeOrmSuggestionStore } from './suggestions/suggestion-store.js';
 import { createApp } from './app.js';
@@ -12,6 +13,7 @@ console.log('Connected to PostgreSQL');
 createApp({
   rankingDb: dataSource,
   catalog: new CatalogService(dataSource),
+  benchmarks: new TypeOrmBenchmarkStore(dataSource),
   suggestions: new TypeOrmSuggestionStore(
     dataSource.getRepository(ModelSuggestion),
   ),

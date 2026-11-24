@@ -18,6 +18,9 @@
       "name": "Catalog"
     },
     {
+      "name": "Benchmarks"
+    },
+    {
       "name": "Suggestions"
     }
   ],
@@ -515,6 +518,203 @@
           }
         }
       }
+    },
+    "/api/benchmarks": {
+      "get": {
+        "tags": ["Benchmarks"],
+        "operationId": "listBenchmarks",
+        "summary": "List benchmark scores for AI models",
+        "responses": {
+          "200": {
+            "description": "List of benchmark scores",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BenchmarkEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": ["Benchmarks"],
+        "operationId": "createBenchmark",
+        "summary": "Create a benchmark score for an existing AI model",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BenchmarkInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Benchmark score created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid or missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Model not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/benchmarks/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "description": "Composite benchmark score ID formatted as <modelId>-<benchmarkId>",
+          "schema": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*-[1-9][0-9]*$"
+          }
+        }
+      ],
+      "get": {
+        "tags": ["Benchmarks"],
+        "operationId": "getBenchmarkById",
+        "summary": "Retrieve a benchmark score by ID",
+        "responses": {
+          "200": {
+            "description": "Benchmark score found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Benchmark not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": ["Benchmarks"],
+        "operationId": "updateBenchmark",
+        "summary": "Update a benchmark score by ID",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BenchmarkUpdateInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Benchmark score updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BenchmarkEntry"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid ID or fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Benchmark not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Benchmarks"],
+        "operationId": "deleteBenchmark",
+        "summary": "Delete a benchmark score by ID",
+        "responses": {
+          "204": {
+            "description": "Benchmark score deleted"
+          },
+          "400": {
+            "description": "Invalid ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Benchmark not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -607,6 +807,100 @@
             "type": "string",
             "format": "date",
             "nullable": true
+          }
+        }
+      },
+      "BenchmarkEntry": {
+        "type": "object",
+        "required": [
+          "id",
+          "modelSlug",
+          "benchmarkName",
+          "score",
+          "unit",
+          "source"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "1-1"
+          },
+          "modelSlug": {
+            "type": "string",
+            "example": "aurora-lumen-2-demo"
+          },
+          "benchmarkName": {
+            "type": "string",
+            "example": "Demo Reasoning Set"
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "example": 71.4
+          },
+          "unit": {
+            "type": "string",
+            "example": "%"
+          },
+          "source": {
+            "type": "string",
+            "nullable": true,
+            "example": "Demo dataset (fictional)"
+          }
+        }
+      },
+      "BenchmarkInput": {
+        "type": "object",
+        "required": ["modelSlug", "benchmarkName", "score"],
+        "additionalProperties": false,
+        "properties": {
+          "modelSlug": {
+            "type": "string",
+            "maxLength": 120,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "benchmarkName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        }
+      },
+      "BenchmarkUpdateInput": {
+        "type": "object",
+        "required": ["score"],
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
           }
         }
       },

@@ -1,0 +1,163 @@
+{
+  "info": {
+    "name": "Benchmarks CRUD API – Lab 6",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "benchmarkId",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "GET all benchmarks",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/benchmarks"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Returns array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST create benchmark score",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"modelSlug\": \"aurora-lumen-2-demo\",\n  \"benchmarkName\": \"Lab 6 CRUD Benchmark\",\n  \"score\": 84.5,\n  \"unit\": \"%\",\n  \"source\": \"Demo dataset (fictional)\"\n}"
+        },
+        "url": "{{baseUrl}}/api/benchmarks"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 201', () => pm.response.to.have.status(201));",
+              "const body = pm.response.json();",
+              "pm.test('Has id', () => pm.expect(body).to.have.property('id'));",
+              "pm.collectionVariables.set('benchmarkId', body.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST invalid benchmark score (400)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"modelSlug\": \"aurora-lumen-2-demo\"\n}"
+        },
+        "url": "{{baseUrl}}/api/benchmarks"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 400', () => pm.response.to.have.status(400));",
+              "pm.test('Has error', () => pm.expect(pm.response.json()).to.have.property('error'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET benchmark by ID",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/benchmarks/{{benchmarkId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Matches created ID', () => pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('benchmarkId')));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT update benchmark by ID",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"score\": 91.2,\n  \"unit\": \"%\",\n  \"source\": \"Demo dataset (fictional)\"\n}"
+        },
+        "url": "{{baseUrl}}/api/benchmarks/{{benchmarkId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 200', () => pm.response.to.have.status(200));",
+              "pm.test('Score updated', () => pm.expect(pm.response.json().score).to.eql(91.2));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE benchmark by ID",
+      "request": {
+        "method": "DELETE",
+        "url": "{{baseUrl}}/api/benchmarks/{{benchmarkId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Status 204', () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
