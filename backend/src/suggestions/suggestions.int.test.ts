@@ -38,6 +38,9 @@ function api() {
       catalog: {
         listLabs: () => Promise.resolve([]),
         findModel: () => Promise.resolve(null),
+        listModels: () => Promise.resolve([]),
+        modelExists: () => Promise.resolve(false),
+        createModel: () => Promise.resolve(null),
       },
       suggestions: new TypeOrmSuggestionStore(
         dataSource.getRepository(ModelSuggestion),

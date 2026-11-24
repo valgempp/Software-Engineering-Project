@@ -1,3 +1,4 @@
+import RankingPage from './pages/RankingPage';
 import { Route, Routes } from 'react-router';
 import Layout from './components/Layout';
 import HomePage from './pages/HomePage';
@@ -10,6 +11,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<HomePage />} />
+        <Route path="ranking" element={<RankingPage />} />
         <Route path="models" element={<ModelsPage />} />
         <Route path="models/:slug" element={<ModelPage />} />
         <Route path="*" element={<NotFoundPage />} />

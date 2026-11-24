@@ -1,0 +1,82 @@
+{
+  "info": {
+    "name": "Maxence – Comparer des modèles",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [{ "key": "baseUrl", "value": "http://localhost:3000" }],
+  "item": [
+    {
+      "name": "Comparer deux modèles",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/comparisons?models=aurora-lumen-2-demo,aurora-atlas-demo"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Selection order\", () => pm.expect(pm.response.json().models.map(m => m.slug)).to.eql([\"aurora-lumen-2-demo\",\"aurora-atlas-demo\"]));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Sélection vide",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/comparisons?models="
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Doublon",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/comparisons?models=aurora-atlas-demo,aurora-atlas-demo"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Modèle inconnu",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/comparisons?models=aurora-atlas-demo,unknown-demo"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ const dataSource = await createDataSource(readDbConfig()).initialize();
 console.log('Connected to PostgreSQL');
 
 createApp({
+  rankingDb: dataSource,
   catalog: new CatalogService(dataSource),
   suggestions: new TypeOrmSuggestionStore(
     dataSource.getRepository(ModelSuggestion),

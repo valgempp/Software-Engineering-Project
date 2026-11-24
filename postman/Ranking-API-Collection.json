@@ -1,0 +1,70 @@
+{
+  "info": {
+    "name": "Ranking comparison – Lab 5",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "benchmarks",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/rankings?kind=benchmarks"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Expected status\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Models returned\", () => pm.expect(pm.response.json().models).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "community",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/rankings?kind=community"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Expected status\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Models returned\", () => pm.expect(pm.response.json().models).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/rankings?kind=invalid"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Expected status\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

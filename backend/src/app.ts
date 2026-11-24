@@ -1,3 +1,6 @@
+import { comparisonsRouter } from './comparisons.js';
+import type { DataSource } from 'typeorm';
+import { rankingsRouter } from './rankings.js';
 import type { SuggestionStore } from './suggestions/suggestion-store.js';
 import swaggerUi from 'swagger-ui-express';
 import { readFileSync } from 'node:fs';
@@ -14,16 +17,19 @@ import { errorHandler, notFoundHandler } from './errors.js';
 
 export interface AppDependencies {
   catalog: Catalog;
+  rankingDb?: DataSource;
   suggestions?: SuggestionStore;
 }
 
 export function createApp({
   catalog,
   suggestions,
+  rankingDb,
 }: AppDependencies): express.Express {
   const app = express();
 
   app.use(express.json());
+  app.use('/api/comparisons', comparisonsRouter(catalog));
 
   // Only says that the API process answers: the database is not checked here.
   app.get('/api/health', (_req, res) => {
@@ -31,6 +37,7 @@ export function createApp({
     res.json(body);
   });
 
+  if (rankingDb) app.use('/api/rankings', rankingsRouter(rankingDb));
   app.use('/api', catalogRouter(catalog));
   if (suggestions) {
     app.use('/api/model-suggestions', suggestionsRouter(suggestions));

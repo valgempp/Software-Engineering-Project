@@ -1,0 +1,234 @@
+{
+  "info": {
+    "name": "AI Models Comparator - Catalog (SCRUM-36)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000"
+    }
+  ],
+  "item": [
+    {
+      "name": "GET All Models",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/models"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Every model has a name, slug and lab\", () => {",
+              "  const models = pm.response.json();",
+              "  pm.expect(models).to.be.an(\"array\").that.is.not.empty;",
+              "  models.forEach((m) => pm.expect(m).to.have.keys(\"name\", \"slug\", \"lab\", \"releaseDate\"));",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET Models Filtered By Lab",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/models?lab=Borealis%20Demo%20Lab"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Only Borealis models\", () => pm.response.json().forEach((m) => pm.expect(m.lab).to.eql(\"Borealis Demo Lab\")));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Create Model",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/models",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Cirrus Nimbus (demo)\",\n  \"slug\": \"cirrus-nimbus-{{$timestamp}}\",\n  \"lab\": \"Cirrus Demo Lab\",\n  \"releaseDate\": \"2026-09-01\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 201\", () => pm.response.to.have.status(201));",
+              "pm.test(\"Returns the created model\", () => {",
+              "  const model = pm.response.json();",
+              "  pm.expect(model.lab).to.eql(\"Cirrus Demo Lab\");",
+              "  pm.expect(model.releaseDate).to.eql(\"2026-09-01\");",
+              "  pm.collectionVariables.set(\"createdSlug\", model.slug);",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET Created Model Detail",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/models/{{createdSlug}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Model belongs to Cirrus Demo Lab\", () => pm.expect(pm.response.json().lab.name).to.eql(\"Cirrus Demo Lab\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Missing Field",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/models",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"No Lab Model\",\n  \"slug\": \"no-lab-model\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Explains the error\", () => pm.expect(pm.response.json().error).to.eql(\"Invalid or missing required fields\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Duplicate Slug",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/models",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Copy\",\n  \"slug\": \"aurora-atlas-demo\",\n  \"lab\": \"Aurora Demo Lab\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 409\", () => pm.response.to.have.status(409));",
+              "pm.test(\"Explains the error\", () => pm.expect(pm.response.json().error).to.eql(\"Model slug already exists\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "POST Unknown Lab",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/models",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Ghost\",\n  \"slug\": \"ghost-model\",\n  \"lab\": \"Ghost Lab\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 404\", () => pm.response.to.have.status(404));",
+              "pm.test(\"Explains the error\", () => pm.expect(pm.response.json().error).to.eql(\"Lab not found\"));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

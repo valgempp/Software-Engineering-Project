@@ -26,6 +26,11 @@ export async function fetchJson<T>(
   path: string,
   signal: AbortSignal,
 ): Promise<T> {
+  if (path.startsWith('/rankings?')) {
+    const response = await fetch(`/api${path}`, { signal });
+    if (!response.ok) throw new ApiError(response.status, null);
+    return response.json() as Promise<T>;
+  }
   if (path === '/labs') {
     const result = await getLabs({ signal });
 
