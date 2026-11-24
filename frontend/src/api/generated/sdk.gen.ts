@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses } from './types.gen.js';
+import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -66,3 +66,8 @@ export const createModelSuggestion = <ThrowOnError extends boolean = false>(opti
         ...options.headers
     }
 });
+
+/**
+ * Compare selected models in selection order
+ */
+export const compareModels = <ThrowOnError extends boolean = false>(options: Options<CompareModelsData, ThrowOnError>): RequestResult<CompareModelsResponses, CompareModelsErrors, ThrowOnError> => (options.client ?? client).get<CompareModelsResponses, CompareModelsErrors, ThrowOnError>({ url: '/api/comparisons', ...options });
