@@ -26,12 +26,12 @@ describe('ranking comparison', () => {
     },
   ];
   const db = {
-    getRepository: () => ({ find: async () => models }),
+    getRepository: () => ({ find: () => Promise.resolve(models) }),
   } as unknown as DataSource;
   const app = express().use('/api/rankings', rankingsRouter(db));
   it('switches rank, score, order and comparison position', async () => {
     const benchmarks = await request(app).get('/api/rankings').expect(200);
-    expect(benchmarks.body.models[0]).toMatchObject({
+    expect((benchmarks.body as { models: unknown[] }).models[0]).toMatchObject({
       slug: 'b',
       rank: 1,
       score: 80,
@@ -40,7 +40,7 @@ describe('ranking comparison', () => {
     const community = await request(app)
       .get('/api/rankings?kind=community')
       .expect(200);
-    expect(community.body.models[0]).toMatchObject({
+    expect((community.body as { models: unknown[] }).models[0]).toMatchObject({
       slug: 'a',
       rank: 1,
       score: 90,
