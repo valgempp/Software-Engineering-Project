@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses } from './types.gen.js';
+import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, DeleteModelSuggestionData, DeleteModelSuggestionErrors, DeleteModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, GetModelSuggestionData, GetModelSuggestionErrors, GetModelSuggestionResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses, UpdateModelSuggestionData, UpdateModelSuggestionErrors, UpdateModelSuggestionResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -71,3 +71,25 @@ export const createModelSuggestion = <ThrowOnError extends boolean = false>(opti
  * Compare selected models in selection order
  */
 export const compareModels = <ThrowOnError extends boolean = false>(options: Options<CompareModelsData, ThrowOnError>): RequestResult<CompareModelsResponses, CompareModelsErrors, ThrowOnError> => (options.client ?? client).get<CompareModelsResponses, CompareModelsErrors, ThrowOnError>({ url: '/api/comparisons', ...options });
+
+/**
+ * Delete a suggestion
+ */
+export const deleteModelSuggestion = <ThrowOnError extends boolean = false>(options: Options<DeleteModelSuggestionData, ThrowOnError>): RequestResult<DeleteModelSuggestionResponses, DeleteModelSuggestionErrors, ThrowOnError> => (options.client ?? client).delete<DeleteModelSuggestionResponses, DeleteModelSuggestionErrors, ThrowOnError>({ url: '/api/model-suggestions/{id}', ...options });
+
+/**
+ * Get a suggestion by ID
+ */
+export const getModelSuggestion = <ThrowOnError extends boolean = false>(options: Options<GetModelSuggestionData, ThrowOnError>): RequestResult<GetModelSuggestionResponses, GetModelSuggestionErrors, ThrowOnError> => (options.client ?? client).get<GetModelSuggestionResponses, GetModelSuggestionErrors, ThrowOnError>({ url: '/api/model-suggestions/{id}', ...options });
+
+/**
+ * Update a suggestion
+ */
+export const updateModelSuggestion = <ThrowOnError extends boolean = false>(options: Options<UpdateModelSuggestionData, ThrowOnError>): RequestResult<UpdateModelSuggestionResponses, UpdateModelSuggestionErrors, ThrowOnError> => (options.client ?? client).put<UpdateModelSuggestionResponses, UpdateModelSuggestionErrors, ThrowOnError>({
+    url: '/api/model-suggestions/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});

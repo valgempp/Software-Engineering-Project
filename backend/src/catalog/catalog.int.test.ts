@@ -49,7 +49,10 @@ describe('catalogue on PostgreSQL', () => {
   it('creates the schema with the migrations only, matching the entities', async () => {
     const applied = await dataSource.runMigrations({ transaction: 'all' });
 
-    expect(applied.map((m) => m.name)).toEqual(['CatalogSchema1791940953315']);
+    expect(applied.map((m) => m.name)).toEqual([
+      'CatalogSchema1791940953315',
+      'ModelSuggestions1791940953316',
+    ]);
     expect(await dataSource.showMigrations()).toBe(false);
     const pending = await dataSource.driver.createSchemaBuilder().log();
     expect(pending.upQueries).toEqual([]);

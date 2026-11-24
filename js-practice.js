@@ -82,6 +82,9 @@ function addPatient(name, age) {
 }
 
 console.log('Patients older than 30:', filterByAge(30));
+
+// 2.5 Adding a Patient
+console.log('\n--- Exercise 2.5 ---');
 addPatient('David', 40);
 console.log('Updated patients:', patients);
 
