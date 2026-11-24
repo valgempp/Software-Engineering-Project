@@ -132,3 +132,96 @@ export type CreateModelSuggestionResponses = {
 };
 
 export type CreateModelSuggestionResponse = CreateModelSuggestionResponses[keyof CreateModelSuggestionResponses];
+
+export type DeleteModelSuggestionData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/model-suggestions/{id}';
+};
+
+export type DeleteModelSuggestionErrors = {
+    /**
+     * HTTP 400
+     */
+    400: Error;
+    /**
+     * HTTP 404
+     */
+    404: Error;
+};
+
+export type DeleteModelSuggestionError = DeleteModelSuggestionErrors[keyof DeleteModelSuggestionErrors];
+
+export type DeleteModelSuggestionResponses = {
+    /**
+     * Suggestion deleted
+     */
+    204: void;
+};
+
+export type DeleteModelSuggestionResponse = DeleteModelSuggestionResponses[keyof DeleteModelSuggestionResponses];
+
+export type GetModelSuggestionData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/model-suggestions/{id}';
+};
+
+export type GetModelSuggestionErrors = {
+    /**
+     * HTTP 400
+     */
+    400: Error;
+    /**
+     * HTTP 404
+     */
+    404: Error;
+};
+
+export type GetModelSuggestionError = GetModelSuggestionErrors[keyof GetModelSuggestionErrors];
+
+export type GetModelSuggestionResponses = {
+    /**
+     * HTTP 200
+     */
+    200: Suggestion;
+};
+
+export type GetModelSuggestionResponse = GetModelSuggestionResponses[keyof GetModelSuggestionResponses];
+
+export type UpdateModelSuggestionData = {
+    body: SuggestionInput;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/model-suggestions/{id}';
+};
+
+export type UpdateModelSuggestionErrors = {
+    /**
+     * HTTP 400
+     */
+    400: Error;
+    /**
+     * HTTP 404
+     */
+    404: Error;
+};
+
+export type UpdateModelSuggestionError = UpdateModelSuggestionErrors[keyof UpdateModelSuggestionErrors];
+
+export type UpdateModelSuggestionResponses = {
+    /**
+     * HTTP 200
+     */
+    200: Suggestion;
+};
+
+export type UpdateModelSuggestionResponse = UpdateModelSuggestionResponses[keyof UpdateModelSuggestionResponses];

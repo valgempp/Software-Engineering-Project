@@ -141,6 +141,114 @@
           }
         }
       ]
+    },
+    {
+      "name": "GET Suggestion by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions/{{createdSuggestionId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Correct model\", () => pm.expect(pm.response.json().name).to.eql(\"GPT-6\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "PUT Update Suggestion",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions/{{createdSuggestionId}}",
+        "body": {
+          "mode": "raw",
+          "raw": "{\"name\": \"Updated Model\", \"provider\": \"Updated Lab\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Model updated\", () => pm.expect(pm.response.json().name).to.eql(\"Updated Model\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET Updated Suggestion by ID",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions/{{createdSuggestionId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Update saved\", () => pm.expect(pm.response.json().provider).to.eql(\"Updated Lab\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "DELETE Suggestion",
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/api/model-suggestions/{{createdSuggestionId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Status is 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
     }
   ]
 }

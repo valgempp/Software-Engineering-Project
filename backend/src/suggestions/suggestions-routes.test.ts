@@ -13,6 +13,21 @@ function createTestApp() {
     list() {
       return Promise.resolve([...suggestions]);
     },
+    findById(id: number) {
+      return Promise.resolve(suggestions.find((s) => s.id === id) ?? null);
+    },
+    update(id: number, input: SuggestionInput) {
+      const suggestion = suggestions.find((s) => s.id === id);
+      if (!suggestion) return Promise.resolve(null);
+      Object.assign(suggestion, input);
+      return Promise.resolve({ ...suggestion });
+    },
+    delete(id: number) {
+      const index = suggestions.findIndex((s) => s.id === id);
+      if (index === -1) return Promise.resolve(false);
+      suggestions.splice(index, 1);
+      return Promise.resolve(true);
+    },
     create(input: SuggestionInput) {
       const suggestion: ModelSuggestion = {
         id: suggestions.length + 1,
@@ -96,5 +111,71 @@ describe('Model Suggestions API', () => {
       { id: 1, name: 'GPT-6', provider: 'OpenAI' },
       { id: 2, name: 'Claude', provider: 'Anthropic' },
     ]);
+  });
+
+  it('GET by ID returns a suggestion', async () => {
+    const app = createTestApp();
+    await request(app)
+      .post('/api/model-suggestions')
+      .send({ name: 'GPT-6', provider: 'OpenAI' });
+
+    const res = await request(app).get('/api/model-suggestions/1');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ name: 'GPT-6' });
+  });
+
+  it('GET by ID returns 404 when missing', async () => {
+    const res = await request(createTestApp()).get(
+      '/api/model-suggestions/999',
+    );
+
+    expect(res.status).toBe(404);
+  });
+
+  it('PUT updates a suggestion', async () => {
+    const app = createTestApp();
+    await request(app)
+      .post('/api/model-suggestions')
+      .send({ name: 'GPT-6', provider: 'OpenAI' });
+
+    const res = await request(app)
+      .put('/api/model-suggestions/1')
+      .send({ name: 'Claude', provider: 'Anthropic' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ name: 'Claude' });
+    expect(res.body).toMatchObject({ provider: 'Anthropic' });
+  });
+
+  it('PUT returns 404 when missing', async () => {
+    const res = await request(createTestApp())
+      .put('/api/model-suggestions/999')
+      .send({ name: 'Claude', provider: 'Anthropic' });
+
+    expect(res.status).toBe(404);
+  });
+
+  it('DELETE removes a suggestion', async () => {
+    const app = createTestApp();
+    await request(app)
+      .post('/api/model-suggestions')
+      .send({ name: 'GPT-6', provider: 'OpenAI' });
+
+    const res = await request(app).delete('/api/model-suggestions/1');
+
+    expect(res.status).toBe(204);
+
+    const check = await request(app).get('/api/model-suggestions/1');
+
+    expect(check.status).toBe(404);
+  });
+
+  it('DELETE returns 404 when missing', async () => {
+    const res = await request(createTestApp()).delete(
+      '/api/model-suggestions/999',
+    );
+
+    expect(res.status).toBe(404);
   });
 });
