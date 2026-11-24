@@ -19,7 +19,7 @@ describe('App', () => {
     renderAt('/');
 
     const nav = screen.getByRole('navigation', { name: 'Main' });
-    expect(nav.textContent).toBe('Models');
+    expect(nav.querySelector('a[href="/ranking"]')).toBeTruthy();
   });
 
   it('shows a not found page for an unknown route', () => {

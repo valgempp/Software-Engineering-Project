@@ -10,6 +10,9 @@ export default function Layout() {
             {APP_NAME}
           </Link>
           <nav aria-label="Main">
+            <NavLink to="/ranking" className="px-3 py-2">
+              Ranking
+            </NavLink>
             <NavLink
               to="/models"
               className={({ isActive }) =>
