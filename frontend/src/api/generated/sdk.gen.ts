@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, DeleteModelSuggestionData, DeleteModelSuggestionErrors, DeleteModelSuggestionResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, GetModelSuggestionData, GetModelSuggestionErrors, GetModelSuggestionResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses, UpdateModelSuggestionData, UpdateModelSuggestionErrors, UpdateModelSuggestionResponses } from './types.gen.js';
+import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, DeleteModelSuggestionData, DeleteModelSuggestionErrors, DeleteModelSuggestionResponses, DeleteSavedComparisonByIdData, DeleteSavedComparisonByIdErrors, DeleteSavedComparisonByIdResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, GetModelSuggestionData, GetModelSuggestionErrors, GetModelSuggestionResponses, GetSavedComparisonByIdData, GetSavedComparisonByIdErrors, GetSavedComparisonByIdResponses, GetSavedComparisonData, GetSavedComparisonErrors, GetSavedComparisonResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses, PostSavedComparisonData, PostSavedComparisonErrors, PostSavedComparisonResponses, PutSavedComparisonByIdData, PutSavedComparisonByIdErrors, PutSavedComparisonByIdResponses, UpdateModelSuggestionData, UpdateModelSuggestionErrors, UpdateModelSuggestionResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -87,6 +87,45 @@ export const getModelSuggestion = <ThrowOnError extends boolean = false>(options
  */
 export const updateModelSuggestion = <ThrowOnError extends boolean = false>(options: Options<UpdateModelSuggestionData, ThrowOnError>): RequestResult<UpdateModelSuggestionResponses, UpdateModelSuggestionErrors, ThrowOnError> => (options.client ?? client).put<UpdateModelSuggestionResponses, UpdateModelSuggestionErrors, ThrowOnError>({
     url: '/api/model-suggestions/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * get saved comparisons
+ */
+export const getSavedComparison = <ThrowOnError extends boolean = false>(options?: Options<GetSavedComparisonData, ThrowOnError>): RequestResult<GetSavedComparisonResponses, GetSavedComparisonErrors, ThrowOnError> => (options?.client ?? client).get<GetSavedComparisonResponses, GetSavedComparisonErrors, ThrowOnError>({ url: '/api/saved-comparisons', ...options });
+
+/**
+ * post saved comparisons
+ */
+export const postSavedComparison = <ThrowOnError extends boolean = false>(options: Options<PostSavedComparisonData, ThrowOnError>): RequestResult<PostSavedComparisonResponses, PostSavedComparisonErrors, ThrowOnError> => (options.client ?? client).post<PostSavedComparisonResponses, PostSavedComparisonErrors, ThrowOnError>({
+    url: '/api/saved-comparisons',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * delete saved comparisons
+ */
+export const deleteSavedComparisonById = <ThrowOnError extends boolean = false>(options: Options<DeleteSavedComparisonByIdData, ThrowOnError>): RequestResult<DeleteSavedComparisonByIdResponses, DeleteSavedComparisonByIdErrors, ThrowOnError> => (options.client ?? client).delete<DeleteSavedComparisonByIdResponses, DeleteSavedComparisonByIdErrors, ThrowOnError>({ url: '/api/saved-comparisons/{id}', ...options });
+
+/**
+ * get saved comparisons
+ */
+export const getSavedComparisonById = <ThrowOnError extends boolean = false>(options: Options<GetSavedComparisonByIdData, ThrowOnError>): RequestResult<GetSavedComparisonByIdResponses, GetSavedComparisonByIdErrors, ThrowOnError> => (options.client ?? client).get<GetSavedComparisonByIdResponses, GetSavedComparisonByIdErrors, ThrowOnError>({ url: '/api/saved-comparisons/{id}', ...options });
+
+/**
+ * put saved comparisons
+ */
+export const putSavedComparisonById = <ThrowOnError extends boolean = false>(options: Options<PutSavedComparisonByIdData, ThrowOnError>): RequestResult<PutSavedComparisonByIdResponses, PutSavedComparisonByIdErrors, ThrowOnError> => (options.client ?? client).put<PutSavedComparisonByIdResponses, PutSavedComparisonByIdErrors, ThrowOnError>({
+    url: '/api/saved-comparisons/{id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',

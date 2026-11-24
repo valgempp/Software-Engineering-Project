@@ -84,3 +84,26 @@ whole schema again: always run it on a database that is up to date.
   two decimals are rounded by the column.
 - Aggregated scores and ranks stay empty until the ranking computation exists: the pages show
   "Not ranked" and "No votes yet".
+
+## Lab 6 - Saved comparisons (SCRUM-8, Maxence)
+
+Run npm run db:migrate before starting the API. A saved comparison contains
+an integer id, a name (1-100 characters), and 2-10 distinct catalogue model
+slugs in selection order.
+
+- GET /api/saved-comparisons lists saved selections.
+- GET /api/saved-comparisons/:id retrieves one selection.
+- POST /api/saved-comparisons creates a selection (201 and Location).
+- PUT /api/saved-comparisons/:id replaces its name and models (200).
+- DELETE /api/saved-comparisons/:id deletes it (204).
+
+POST and PUT accept {"name":"Demo","models":["aurora-atlas-demo","aurora-lumen-2-demo"]}.
+Invalid input returns 400; an unknown comparison or model returns 404.
+Selections are shared demo resources. Their stored slugs represent the selection,
+while GET /api/comparisons?models=... retrieves current model measurements.
+If a catalogue model is later removed, its saved slug remains in the selection;
+update the selection before requesting a live comparison.
+
+The automated CRUD tests cover creation, reading, replacement, deletion,
+invalid input, missing resources and IDs after deletion. Swagger at /api-docs
+provides executable requests. These endpoints are persistent through TypeORM.

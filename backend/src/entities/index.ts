@@ -1,3 +1,4 @@
+import { SavedComparison } from './SavedComparison.js';
 import { ModelSuggestion } from './ModelSuggestion.js';
 import { Benchmark } from './Benchmark.js';
 import { Lab } from './Lab.js';
@@ -9,6 +10,7 @@ export { Benchmark, Lab, LLMModel, ModelSuggestion, Score, Source };
 export { SourceType } from './Source.js';
 
 export const entities = [
+  SavedComparison,
   Lab,
   LLMModel,
   Benchmark,
