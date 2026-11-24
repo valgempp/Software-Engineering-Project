@@ -209,3 +209,52 @@ export type CreateModelSuggestionResponses = {
 };
 
 export type CreateModelSuggestionResponse = CreateModelSuggestionResponses[keyof CreateModelSuggestionResponses];
+
+export type CompareModelsData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * 2 to 10 distinct model slugs separated by commas.
+         */
+        models: string;
+    };
+    url: '/api/comparisons';
+};
+
+export type CompareModelsErrors = {
+    /**
+     * Invalid selection
+     */
+    400: {
+        error: string;
+    };
+    /**
+     * Unknown model
+     */
+    404: {
+        error: string;
+    };
+};
+
+export type CompareModelsError = CompareModelsErrors[keyof CompareModelsErrors];
+
+export type CompareModelsResponses = {
+    /**
+     * Comparison, including models with no benchmark measurements
+     */
+    200: {
+        models: Array<{
+            slug: string;
+            name: string;
+            lab: string;
+            releaseDate: string | null;
+            benchmarks: Array<{
+                benchmark: string;
+                value: number;
+            }>;
+        }>;
+    };
+};
+
+export type CompareModelsResponse = CompareModelsResponses[keyof CompareModelsResponses];

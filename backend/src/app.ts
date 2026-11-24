@@ -1,3 +1,4 @@
+import { comparisonsRouter } from './comparisons.js';
 import type { DataSource } from 'typeorm';
 import { rankingsRouter } from './rankings.js';
 import type { SuggestionStore } from './suggestions/suggestion-store.js';
@@ -28,6 +29,7 @@ export function createApp({
   const app = express();
 
   app.use(express.json());
+  app.use('/api/comparisons', comparisonsRouter(catalog));
 
   // Only says that the API process answers: the database is not checked here.
   app.get('/api/health', (_req, res) => {
