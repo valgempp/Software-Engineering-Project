@@ -15,11 +15,9 @@ export function comparisonsRouter(catalog: Pick<Catalog, 'findModel'>) {
         (slug) => slug.length > SLUG_MAX_LENGTH || !SLUG_PATTERN.test(slug),
       )
     ) {
-      res
-        .status(400)
-        .json({
-          error: 'Select 2 to 10 distinct model slugs, separated by commas.',
-        });
+      res.status(400).json({
+        error: 'Select 2 to 10 distinct model slugs, separated by commas.',
+      });
       return;
     }
     const models = await Promise.all(
