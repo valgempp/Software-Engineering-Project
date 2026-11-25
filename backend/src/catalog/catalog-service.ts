@@ -5,7 +5,7 @@ import type {
   NewModelInput,
 } from '@aimc/shared';
 import type { DataSource } from 'typeorm';
-import { Lab, LLMModel } from '../entities/index.js';
+import { Lab, LLMModel, Score } from '../entities/index.js';
 
 export interface Catalog {
   listLabs(): Promise<LabSummary[]>;
@@ -14,6 +14,13 @@ export interface Catalog {
   modelExists(slug: string): Promise<boolean>;
   /** Resolves to null when the lab does not exist: a model is never created without its lab. */
   createModel(input: NewModelInput): Promise<CatalogModel | null>;
+  /** Resolves to null when the lab does not exist. */
+  updateModel(
+    slug: string,
+    input: Omit<NewModelInput, 'slug'>,
+  ): Promise<CatalogModel | null>;
+  /** Resolves to false when the model still has benchmark scores. */
+  deleteModel(slug: string): Promise<boolean>;
 }
 
 // Sorted in code rather than by PostgreSQL: the result does not depend on the database collation.
@@ -70,6 +77,39 @@ export class CatalogService implements Catalog {
       }),
     );
     return toCatalogModel(model);
+  }
+
+  async updateModel(
+    slug: string,
+    input: Omit<NewModelInput, 'slug'>,
+  ): Promise<CatalogModel | null> {
+    const lab = await this.dataSource
+      .getRepository(Lab)
+      .findOneBy({ name: input.lab });
+    if (!lab) {
+      return null;
+    }
+
+    const repo = this.dataSource.getRepository(LLMModel);
+    const model = await repo.findOneByOrFail({ slug });
+    model.name = input.name;
+    model.releaseDate = input.releaseDate ?? null;
+    model.lab = lab;
+    return toCatalogModel(await repo.save(model));
+  }
+
+  async deleteModel(slug: string): Promise<boolean> {
+    const repo = this.dataSource.getRepository(LLMModel);
+    const model = await repo.findOneByOrFail({ slug });
+    const hasScores = await this.dataSource
+      .getRepository(Score)
+      .existsBy({ modelId: model.id });
+    if (hasScores) {
+      return false;
+    }
+
+    await repo.delete({ id: model.id });
+    return true;
   }
 
   async findModel(slug: string): Promise<ModelDetail | null> {

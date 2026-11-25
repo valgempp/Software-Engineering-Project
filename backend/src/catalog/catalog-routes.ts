@@ -18,6 +18,8 @@ const newModelSchema = z.object({
   releaseDate: z.iso.date().nullable().optional(),
 });
 
+const modelUpdateSchema = newModelSchema.omit({ slug: true });
+
 const labFilterSchema = z.string().trim().min(1).max(100).optional();
 
 export function catalogRouter(catalog: Catalog): Router {
@@ -84,6 +86,63 @@ export function catalogRouter(catalog: Catalog): Router {
 
     const body: ModelDetail = model;
     res.json(body);
+  });
+
+  router.put('/models/:slug', async (req, res) => {
+    const slug = slugSchema.safeParse(req.params.slug);
+    if (!slug.success) {
+      const body: ErrorResponse = { error: 'Invalid model slug' };
+      res.status(400).json(body);
+      return;
+    }
+
+    const input = modelUpdateSchema.safeParse(req.body);
+    if (!input.success) {
+      const body: ErrorResponse = {
+        error: 'Invalid or missing required fields',
+      };
+      res.status(400).json(body);
+      return;
+    }
+
+    if (!(await catalog.modelExists(slug.data))) {
+      const body: ErrorResponse = { error: 'Model not found' };
+      res.status(404).json(body);
+      return;
+    }
+
+    const updated = await catalog.updateModel(slug.data, input.data);
+    if (!updated) {
+      const body: ErrorResponse = { error: 'Lab not found' };
+      res.status(404).json(body);
+      return;
+    }
+
+    const body: CatalogModel = updated;
+    res.json(body);
+  });
+
+  router.delete('/models/:slug', async (req, res) => {
+    const slug = slugSchema.safeParse(req.params.slug);
+    if (!slug.success) {
+      const body: ErrorResponse = { error: 'Invalid model slug' };
+      res.status(400).json(body);
+      return;
+    }
+
+    if (!(await catalog.modelExists(slug.data))) {
+      const body: ErrorResponse = { error: 'Model not found' };
+      res.status(404).json(body);
+      return;
+    }
+
+    if (!(await catalog.deleteModel(slug.data))) {
+      const body: ErrorResponse = { error: 'Model still has benchmark scores' };
+      res.status(409).json(body);
+      return;
+    }
+
+    res.status(204).end();
   });
 
   return router;

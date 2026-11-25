@@ -213,6 +213,43 @@ describe('catalogue on PostgreSQL', () => {
     ).toBe(false);
   });
 
+  it('PUT then DELETE /api/models/:slug change and remove a model', async () => {
+    await api().post('/api/models').send({
+      name: 'Cirrus Haze (demo)',
+      slug: 'cirrus-haze-demo',
+      lab: 'Cirrus Demo Lab',
+    });
+
+    const updated = await api().put('/api/models/cirrus-haze-demo').send({
+      name: 'Cirrus Haze 2 (demo)',
+      lab: 'Borealis Demo Lab',
+      releaseDate: '2026-10-01',
+    });
+    const detail = await api().get('/api/models/cirrus-haze-demo');
+    const deleted = await api().delete('/api/models/cirrus-haze-demo');
+    const afterDelete = await api().get('/api/models/cirrus-haze-demo');
+
+    expect(updated.status).toBe(200);
+    expect(detail.body).toMatchObject({
+      name: 'Cirrus Haze 2 (demo)',
+      releaseDate: '2026-10-01',
+      lab: { name: 'Borealis Demo Lab' },
+    });
+    expect(deleted.status).toBe(204);
+    expect(afterDelete.status).toBe(404);
+  });
+
+  it('DELETE /api/models/:slug keeps a model that has benchmark scores', async () => {
+    const res = await api().delete('/api/models/aurora-lumen-2-demo');
+
+    expect(res.status).toBe(409);
+    expect(
+      await dataSource
+        .getRepository(LLMModel)
+        .existsBy({ slug: 'aurora-lumen-2-demo' }),
+    ).toBe(true);
+  });
+
   it('refuses to delete a lab that still has models', async () => {
     await expect(
       dataSource.getRepository(Lab).delete({ name: 'Aurora Demo Lab' }),

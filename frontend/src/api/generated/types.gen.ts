@@ -33,6 +33,12 @@ export type NewModelInput = {
     releaseDate?: string | null;
 };
 
+export type ModelUpdateInput = {
+    name: string;
+    lab: string;
+    releaseDate?: string | null;
+};
+
 export type Error = {
     error: string;
 };
@@ -159,6 +165,41 @@ export type CreateModelResponses = {
 
 export type CreateModelResponse = CreateModelResponses[keyof CreateModelResponses];
 
+export type DeleteModelData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/models/{slug}';
+};
+
+export type DeleteModelErrors = {
+    /**
+     * Invalid model slug
+     */
+    400: Error;
+    /**
+     * Model not found
+     */
+    404: Error;
+    /**
+     * Model still has benchmark scores
+     */
+    409: Error;
+};
+
+export type DeleteModelError = DeleteModelErrors[keyof DeleteModelErrors];
+
+export type DeleteModelResponses = {
+    /**
+     * Model deleted
+     */
+    204: void;
+};
+
+export type DeleteModelResponse = DeleteModelResponses[keyof DeleteModelResponses];
+
 export type GetModelBySlugData = {
     body?: never;
     path: {
@@ -191,6 +232,37 @@ export type GetModelBySlugResponses = {
 };
 
 export type GetModelBySlugResponse = GetModelBySlugResponses[keyof GetModelBySlugResponses];
+
+export type UpdateModelData = {
+    body: ModelUpdateInput;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/models/{slug}';
+};
+
+export type UpdateModelErrors = {
+    /**
+     * Invalid model slug or invalid fields
+     */
+    400: Error;
+    /**
+     * Model or lab not found
+     */
+    404: Error;
+};
+
+export type UpdateModelError = UpdateModelErrors[keyof UpdateModelErrors];
+
+export type UpdateModelResponses = {
+    /**
+     * Model updated
+     */
+    200: CatalogModel;
+};
+
+export type UpdateModelResponse = UpdateModelResponses[keyof UpdateModelResponses];
 
 export type ListModelSuggestionsData = {
     body?: never;
