@@ -52,6 +52,7 @@ describe('catalogue on PostgreSQL', () => {
     expect(applied.map((m) => m.name)).toEqual([
       'CatalogSchema1791940953315',
       'ModelSuggestions1791940953316',
+      'SavedComparisons1795520000000',
     ]);
     expect(await dataSource.showMigrations()).toBe(false);
     const pending = await dataSource.driver.createSchemaBuilder().log();
