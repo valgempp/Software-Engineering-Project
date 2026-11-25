@@ -1,5 +1,7 @@
 import { benchmarksRouter } from './benchmarks/benchmarks-routes.js';
 import type { BenchmarkStore } from './benchmarks/benchmark-store.js';
+import { savedComparisonsRouter } from './saved-comparisons.js';
+import { SavedComparison } from './entities/SavedComparison.js';
 import { comparisonsRouter } from './comparisons.js';
 import type { DataSource } from 'typeorm';
 import { rankingsRouter } from './rankings.js';
@@ -33,6 +35,11 @@ export function createApp({
   const app = express();
 
   app.use(express.json());
+  if (rankingDb)
+    app.use(
+      '/api/saved-comparisons',
+      savedComparisonsRouter(rankingDb.getRepository(SavedComparison), catalog),
+    );
   app.use('/api/comparisons', comparisonsRouter(catalog));
 
   // Only says that the API process answers: the database is not checked here.

@@ -33,6 +33,10 @@ export type NewModelInput = {
     releaseDate?: string | null;
 };
 
+export type Error = {
+    error: string;
+};
+
 export type BenchmarkEntry = {
     id: string;
     modelSlug: string;
@@ -54,10 +58,6 @@ export type BenchmarkUpdateInput = {
     score: number;
     unit?: string;
     source?: string;
-};
-
-export type Error = {
-    error: string;
 };
 
 export type GetHealthData = {
@@ -374,6 +374,189 @@ export type UpdateModelSuggestionResponses = {
 };
 
 export type UpdateModelSuggestionResponse = UpdateModelSuggestionResponses[keyof UpdateModelSuggestionResponses];
+
+export type GetSavedComparisonData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/saved-comparisons';
+};
+
+export type GetSavedComparisonErrors = {
+    /**
+     * Invalid input
+     */
+    400: unknown;
+    /**
+     * Unknown comparison or selected model
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type GetSavedComparisonResponses = {
+    /**
+     * Success
+     */
+    200: Array<{
+        id: number;
+        name: string;
+        models: Array<string>;
+    }>;
+};
+
+export type GetSavedComparisonResponse = GetSavedComparisonResponses[keyof GetSavedComparisonResponses];
+
+export type PostSavedComparisonData = {
+    body: {
+        name: string;
+        models: Array<string>;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/saved-comparisons';
+};
+
+export type PostSavedComparisonErrors = {
+    /**
+     * Invalid input
+     */
+    400: unknown;
+    /**
+     * Unknown comparison or selected model
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type PostSavedComparisonResponses = {
+    /**
+     * Created
+     */
+    201: {
+        id: number;
+        name: string;
+        models: Array<string>;
+    };
+};
+
+export type PostSavedComparisonResponse = PostSavedComparisonResponses[keyof PostSavedComparisonResponses];
+
+export type DeleteSavedComparisonByIdData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/saved-comparisons/{id}';
+};
+
+export type DeleteSavedComparisonByIdErrors = {
+    /**
+     * Invalid input
+     */
+    400: unknown;
+    /**
+     * Unknown comparison or selected model
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type DeleteSavedComparisonByIdResponses = {
+    /**
+     * Success
+     */
+    204: void;
+};
+
+export type DeleteSavedComparisonByIdResponse = DeleteSavedComparisonByIdResponses[keyof DeleteSavedComparisonByIdResponses];
+
+export type GetSavedComparisonByIdData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/saved-comparisons/{id}';
+};
+
+export type GetSavedComparisonByIdErrors = {
+    /**
+     * Invalid input
+     */
+    400: unknown;
+    /**
+     * Unknown comparison or selected model
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type GetSavedComparisonByIdResponses = {
+    /**
+     * Success
+     */
+    200: {
+        id: number;
+        name: string;
+        models: Array<string>;
+    };
+};
+
+export type GetSavedComparisonByIdResponse = GetSavedComparisonByIdResponses[keyof GetSavedComparisonByIdResponses];
+
+export type PutSavedComparisonByIdData = {
+    body: {
+        name: string;
+        models: Array<string>;
+    };
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/saved-comparisons/{id}';
+};
+
+export type PutSavedComparisonByIdErrors = {
+    /**
+     * Invalid input
+     */
+    400: unknown;
+    /**
+     * Unknown comparison or selected model
+     */
+    404: unknown;
+    /**
+     * Internal server error
+     */
+    500: unknown;
+};
+
+export type PutSavedComparisonByIdResponses = {
+    /**
+     * Success
+     */
+    200: {
+        id: number;
+        name: string;
+        models: Array<string>;
+    };
+};
+
+export type PutSavedComparisonByIdResponse = PutSavedComparisonByIdResponses[keyof PutSavedComparisonByIdResponses];
 
 export type ListBenchmarksData = {
     body?: never;
