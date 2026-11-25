@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, DeleteModelSuggestionData, DeleteModelSuggestionErrors, DeleteModelSuggestionResponses, DeleteSavedComparisonByIdData, DeleteSavedComparisonByIdErrors, DeleteSavedComparisonByIdResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, GetModelSuggestionData, GetModelSuggestionErrors, GetModelSuggestionResponses, GetSavedComparisonByIdData, GetSavedComparisonByIdErrors, GetSavedComparisonByIdResponses, GetSavedComparisonData, GetSavedComparisonErrors, GetSavedComparisonResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses, PostSavedComparisonData, PostSavedComparisonErrors, PostSavedComparisonResponses, PutSavedComparisonByIdData, PutSavedComparisonByIdErrors, PutSavedComparisonByIdResponses, UpdateModelSuggestionData, UpdateModelSuggestionErrors, UpdateModelSuggestionResponses } from './types.gen.js';
+import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateBenchmarkData, CreateBenchmarkErrors, CreateBenchmarkResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, DeleteBenchmarkData, DeleteBenchmarkErrors, DeleteBenchmarkResponses, DeleteModelSuggestionData, DeleteModelSuggestionErrors, DeleteModelSuggestionResponses, DeleteSavedComparisonByIdData, DeleteSavedComparisonByIdErrors, DeleteSavedComparisonByIdResponses, GetBenchmarkByIdData, GetBenchmarkByIdErrors, GetBenchmarkByIdResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, GetModelSuggestionData, GetModelSuggestionErrors, GetModelSuggestionResponses, GetSavedComparisonByIdData, GetSavedComparisonByIdErrors, GetSavedComparisonByIdResponses, GetSavedComparisonData, GetSavedComparisonErrors, GetSavedComparisonResponses, ListBenchmarksData, ListBenchmarksResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses, PostSavedComparisonData, PostSavedComparisonErrors, PostSavedComparisonResponses, PutSavedComparisonByIdData, PutSavedComparisonByIdErrors, PutSavedComparisonByIdResponses, UpdateBenchmarkData, UpdateBenchmarkErrors, UpdateBenchmarkResponses, UpdateModelSuggestionData, UpdateModelSuggestionErrors, UpdateModelSuggestionResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -126,6 +126,45 @@ export const getSavedComparisonById = <ThrowOnError extends boolean = false>(opt
  */
 export const putSavedComparisonById = <ThrowOnError extends boolean = false>(options: Options<PutSavedComparisonByIdData, ThrowOnError>): RequestResult<PutSavedComparisonByIdResponses, PutSavedComparisonByIdErrors, ThrowOnError> => (options.client ?? client).put<PutSavedComparisonByIdResponses, PutSavedComparisonByIdErrors, ThrowOnError>({
     url: '/api/saved-comparisons/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List benchmark scores for AI models
+ */
+export const listBenchmarks = <ThrowOnError extends boolean = false>(options?: Options<ListBenchmarksData, ThrowOnError>): RequestResult<ListBenchmarksResponses, unknown, ThrowOnError> => (options?.client ?? client).get<ListBenchmarksResponses, unknown, ThrowOnError>({ url: '/api/benchmarks', ...options });
+
+/**
+ * Create a benchmark score for an existing AI model
+ */
+export const createBenchmark = <ThrowOnError extends boolean = false>(options: Options<CreateBenchmarkData, ThrowOnError>): RequestResult<CreateBenchmarkResponses, CreateBenchmarkErrors, ThrowOnError> => (options.client ?? client).post<CreateBenchmarkResponses, CreateBenchmarkErrors, ThrowOnError>({
+    url: '/api/benchmarks',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Delete a benchmark score by ID
+ */
+export const deleteBenchmark = <ThrowOnError extends boolean = false>(options: Options<DeleteBenchmarkData, ThrowOnError>): RequestResult<DeleteBenchmarkResponses, DeleteBenchmarkErrors, ThrowOnError> => (options.client ?? client).delete<DeleteBenchmarkResponses, DeleteBenchmarkErrors, ThrowOnError>({ url: '/api/benchmarks/{id}', ...options });
+
+/**
+ * Retrieve a benchmark score by ID
+ */
+export const getBenchmarkById = <ThrowOnError extends boolean = false>(options: Options<GetBenchmarkByIdData, ThrowOnError>): RequestResult<GetBenchmarkByIdResponses, GetBenchmarkByIdErrors, ThrowOnError> => (options.client ?? client).get<GetBenchmarkByIdResponses, GetBenchmarkByIdErrors, ThrowOnError>({ url: '/api/benchmarks/{id}', ...options });
+
+/**
+ * Update a benchmark score by ID
+ */
+export const updateBenchmark = <ThrowOnError extends boolean = false>(options: Options<UpdateBenchmarkData, ThrowOnError>): RequestResult<UpdateBenchmarkResponses, UpdateBenchmarkErrors, ThrowOnError> => (options.client ?? client).put<UpdateBenchmarkResponses, UpdateBenchmarkErrors, ThrowOnError>({
+    url: '/api/benchmarks/{id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',

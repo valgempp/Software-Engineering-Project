@@ -1,3 +1,5 @@
+import { benchmarksRouter } from './benchmarks/benchmarks-routes.js';
+import type { BenchmarkStore } from './benchmarks/benchmark-store.js';
 import { savedComparisonsRouter } from './saved-comparisons.js';
 import { SavedComparison } from './entities/SavedComparison.js';
 import { comparisonsRouter } from './comparisons.js';
@@ -19,12 +21,14 @@ import { errorHandler, notFoundHandler } from './errors.js';
 
 export interface AppDependencies {
   catalog: Catalog;
+  benchmarks?: BenchmarkStore;
   rankingDb?: DataSource;
   suggestions?: SuggestionStore;
 }
 
 export function createApp({
   catalog,
+  benchmarks,
   suggestions,
   rankingDb,
 }: AppDependencies): express.Express {
@@ -46,6 +50,9 @@ export function createApp({
 
   if (rankingDb) app.use('/api/rankings', rankingsRouter(rankingDb));
   app.use('/api', catalogRouter(catalog));
+  if (benchmarks) {
+    app.use('/api/benchmarks', benchmarksRouter(benchmarks));
+  }
   if (suggestions) {
     app.use('/api/model-suggestions', suggestionsRouter(suggestions));
   }

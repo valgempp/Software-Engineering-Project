@@ -103,6 +103,32 @@ describe('catalogue routes', () => {
     expect(res.body).toEqual({ error: 'Internal server error' });
     consoleError.mockRestore();
   });
+  it('returns 200 for benchmarks when the store is configured', async () => {
+    const entry = {
+      id: '1-1',
+      modelSlug: 'test-model',
+      benchmarkName: 'Demo Reasoning Set',
+      score: 75,
+      unit: '%',
+      source: 'Demo dataset (fictional)',
+    };
+    const app = createApp({
+      catalog: stubCatalog(),
+      benchmarks: {
+        list: () => Promise.resolve([entry]),
+        findById: () => Promise.resolve(entry),
+        modelExists: () => Promise.resolve(true),
+        create: () => Promise.resolve(entry),
+        update: () => Promise.resolve(entry),
+        delete: () => Promise.resolve(true),
+      },
+    });
+
+    const res = await request(app).get('/api/benchmarks');
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual([entry]);
+  });
 });
 
 describe('error handling', () => {
