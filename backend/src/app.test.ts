@@ -25,6 +25,8 @@ function stubCatalog(overrides: Partial<Catalog> = {}): Catalog {
     listModels: () => Promise.resolve([]),
     modelExists: () => Promise.resolve(false),
     createModel: () => Promise.resolve(null),
+    updateModel: () => Promise.resolve(null),
+    deleteModel: () => Promise.resolve(false),
     ...overrides,
   };
 }

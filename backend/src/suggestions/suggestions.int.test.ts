@@ -41,6 +41,8 @@ function api() {
         listModels: () => Promise.resolve([]),
         modelExists: () => Promise.resolve(false),
         createModel: () => Promise.resolve(null),
+        updateModel: () => Promise.resolve(null),
+        deleteModel: () => Promise.resolve(false),
       },
       suggestions: new TypeOrmSuggestionStore(
         dataSource.getRepository(ModelSuggestion),

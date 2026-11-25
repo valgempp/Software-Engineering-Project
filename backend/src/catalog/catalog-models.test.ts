@@ -7,9 +7,10 @@ import { catalogRouter } from './catalog-routes.js';
 import type { Catalog } from './catalog-service.js';
 
 const LABS = ['OpenAI', 'Anthropic'];
+const MODELS_WITH_SCORES = ['gpt-4o'];
 
 function createTestApp() {
-  const models: CatalogModel[] = [
+  let models: CatalogModel[] = [
     { name: 'GPT-4o', slug: 'gpt-4o', lab: 'OpenAI', releaseDate: null },
   ];
 
@@ -27,6 +28,23 @@ function createTestApp() {
       const model = { ...input, releaseDate: input.releaseDate ?? null };
       models.push(model);
       return Promise.resolve(model);
+    },
+    updateModel: (slug, input) => {
+      const existing = models.find((model) => model.slug === slug);
+      if (!existing || !LABS.includes(input.lab)) {
+        return Promise.resolve(null);
+      }
+      existing.name = input.name;
+      existing.lab = input.lab;
+      existing.releaseDate = input.releaseDate ?? null;
+      return Promise.resolve(existing);
+    },
+    deleteModel: (slug) => {
+      if (MODELS_WITH_SCORES.includes(slug)) {
+        return Promise.resolve(false);
+      }
+      models = models.filter((model) => model.slug !== slug);
+      return Promise.resolve(true);
     },
   };
 
@@ -123,5 +141,96 @@ describe('POST /api/models', () => {
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Lab not found' });
+  });
+});
+
+describe('PUT /api/models/:slug', () => {
+  it('updates a model and keeps its slug', async () => {
+    const app = createTestApp();
+
+    const res = await request(app).put('/api/models/gpt-4o').send({
+      name: 'GPT-4o (May 2024)',
+      slug: 'gpt-4o-renamed',
+      lab: 'OpenAI',
+      releaseDate: '2024-05-13',
+    });
+    const list = await request(app).get('/api/models');
+
+    const updated = {
+      name: 'GPT-4o (May 2024)',
+      slug: 'gpt-4o',
+      lab: 'OpenAI',
+      releaseDate: '2024-05-13',
+    };
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual(updated);
+    expect(list.body).toEqual([updated]);
+  });
+
+  it('rejects a missing name with 400', async () => {
+    const res = await request(createTestApp())
+      .put('/api/models/gpt-4o')
+      .send({ lab: 'OpenAI' });
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid or missing required fields' });
+  });
+
+  it('rejects an unknown model with 404', async () => {
+    const res = await request(createTestApp())
+      .put('/api/models/unknown-model')
+      .send({ name: 'X', lab: 'OpenAI' });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Model not found' });
+  });
+
+  it('rejects an unknown lab with 404', async () => {
+    const res = await request(createTestApp())
+      .put('/api/models/gpt-4o')
+      .send({ name: 'GPT-4o', lab: 'Unknown Lab' });
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Lab not found' });
+  });
+});
+
+describe('DELETE /api/models/:slug', () => {
+  it('deletes a model', async () => {
+    const app = createTestApp();
+    await request(app).post('/api/models').send(validModel);
+
+    const res = await request(app).delete('/api/models/claude-sonnet-4');
+    const list = await request(app).get('/api/models');
+
+    expect(res.status).toBe(204);
+    expect(list.body).not.toContainEqual(validModel);
+  });
+
+  it('rejects an invalid slug with 400', async () => {
+    const res = await request(createTestApp()).delete('/api/models/Not-A-Slug');
+
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: 'Invalid model slug' });
+  });
+
+  it('rejects an unknown model with 404', async () => {
+    const res = await request(createTestApp()).delete(
+      '/api/models/unknown-model',
+    );
+
+    expect(res.status).toBe(404);
+    expect(res.body).toEqual({ error: 'Model not found' });
+  });
+
+  it('keeps a model that has benchmark scores with 409', async () => {
+    const app = createTestApp();
+
+    const res = await request(app).delete('/api/models/gpt-4o');
+    const list = await request(app).get('/api/models');
+
+    expect(res.status).toBe(409);
+    expect(res.body).toEqual({ error: 'Model still has benchmark scores' });
+    expect(list.body).toHaveLength(1);
   });
 });
