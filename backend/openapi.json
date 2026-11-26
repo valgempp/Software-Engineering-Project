@@ -22,6 +22,9 @@
     },
     {
       "name": "Benchmarks"
+    },
+    {
+      "name": "Authentication"
     }
   ],
   "paths": {
@@ -1136,6 +1139,89 @@
           }
         }
       }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": ["Authentication"],
+        "operationId": "registerUser",
+        "summary": "Create an account and start a session",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrationInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Account created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredUser"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid registration data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Email or username already exists",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "tags": ["Authentication"],
+        "operationId": "getCurrentUser",
+        "summary": "Get the authenticated user",
+        "security": [
+          {
+            "SessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Authenticated user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredUser"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1354,6 +1440,58 @@
             "maxLength": 100
           }
         }
+      },
+      "RegistrationInput": {
+        "type": "object",
+        "required": ["email", "username", "password", "privacyAccepted"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "maxLength": 254
+          },
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "format": "password",
+            "description": "Maximum 72 UTF-8 bytes"
+          },
+          "privacyAccepted": {
+            "type": "boolean",
+            "enum": [true]
+          }
+        }
+      },
+      "RegisteredUser": {
+        "type": "object",
+        "required": ["id", "email", "username", "active"],
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "username": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "SessionCookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "aimc_session"
       }
     }
   }

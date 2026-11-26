@@ -1,3 +1,5 @@
+import { authRouter } from './auth/auth-routes.js';
+import { User } from './entities/User.js';
 import { benchmarksRouter } from './benchmarks/benchmarks-routes.js';
 import type { BenchmarkStore } from './benchmarks/benchmark-store.js';
 import { savedComparisonsRouter } from './saved-comparisons.js';
@@ -35,6 +37,10 @@ export function createApp({
   const app = express();
 
   app.use(express.json());
+
+  if (rankingDb) {
+    app.use('/api/auth', authRouter(rankingDb.getRepository(User)));
+  }
   if (rankingDb)
     app.use(
       '/api/saved-comparisons',

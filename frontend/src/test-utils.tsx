@@ -30,6 +30,19 @@ export function stubFetch(...responses: { status?: number; body: unknown }[]) {
       }),
     );
   });
-  vi.stubGlobal('fetch', fetchMock);
+  vi.stubGlobal('fetch', (input: RequestInfo | URL, init?: RequestInit) => {
+    const url = input instanceof Request ? input.url : String(input);
+
+    if (new URL(url, 'http://localhost').pathname === '/api/auth/me') {
+      return Promise.resolve(
+        new Response(JSON.stringify({ error: 'Not authenticated' }), {
+          status: 401,
+          headers: { 'Content-Type': 'application/json' },
+        }),
+      );
+    }
+
+    return fetchMock(input, init);
+  });
   return fetchMock;
 }
