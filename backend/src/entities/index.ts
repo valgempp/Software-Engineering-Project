@@ -1,3 +1,5 @@
+import { UserSession } from './UserSession.js';
+import { User } from './User.js';
 import { SavedComparison } from './SavedComparison.js';
 import { ModelSuggestion } from './ModelSuggestion.js';
 import { Benchmark } from './Benchmark.js';
@@ -6,10 +8,12 @@ import { LLMModel } from './LLMModel.js';
 import { Score } from './Score.js';
 import { Source } from './Source.js';
 
-export { Benchmark, Lab, LLMModel, ModelSuggestion, Score, Source };
+export { User, Benchmark, Lab, LLMModel, ModelSuggestion, Score, Source };
 export { SourceType } from './Source.js';
 
 export const entities = [
+  UserSession,
+  User,
   SavedComparison,
   Lab,
   LLMModel,

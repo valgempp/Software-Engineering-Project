@@ -15,6 +15,7 @@
     "db:seed": "tsx --env-file-if-exists=../.env src/db/seed/seed.ts"
   },
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "express": "^5.3.0",
     "pg": "^8.23.1",
     "reflect-metadata": "^0.2.2",
@@ -24,6 +25,7 @@
   },
   "devDependencies": {
     "@testcontainers/postgresql": "^12.2.1",
+    "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/supertest": "^7.2.1",
     "@types/swagger-ui-express": "^4.1.8",

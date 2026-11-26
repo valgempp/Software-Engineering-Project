@@ -53,6 +53,8 @@ describe('catalogue on PostgreSQL', () => {
       'CatalogSchema1791940953315',
       'ModelSuggestions1791940953316',
       'SavedComparisons1795520000000',
+      'Users1795687314709',
+      'UserSessions1795687579424',
     ]);
     expect(await dataSource.showMigrations()).toBe(false);
     const pending = await dataSource.driver.createSchemaBuilder().log();

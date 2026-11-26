@@ -2,7 +2,7 @@
 
 import { client } from './client.gen.js';
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client/index.js';
-import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateBenchmarkData, CreateBenchmarkErrors, CreateBenchmarkResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, DeleteBenchmarkData, DeleteBenchmarkErrors, DeleteBenchmarkResponses, DeleteModelData, DeleteModelErrors, DeleteModelResponses, DeleteModelSuggestionData, DeleteModelSuggestionErrors, DeleteModelSuggestionResponses, DeleteSavedComparisonByIdData, DeleteSavedComparisonByIdErrors, DeleteSavedComparisonByIdResponses, GetBenchmarkByIdData, GetBenchmarkByIdErrors, GetBenchmarkByIdResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, GetModelSuggestionData, GetModelSuggestionErrors, GetModelSuggestionResponses, GetSavedComparisonByIdData, GetSavedComparisonByIdErrors, GetSavedComparisonByIdResponses, GetSavedComparisonData, GetSavedComparisonErrors, GetSavedComparisonResponses, ListBenchmarksData, ListBenchmarksResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses, PostSavedComparisonData, PostSavedComparisonErrors, PostSavedComparisonResponses, PutSavedComparisonByIdData, PutSavedComparisonByIdErrors, PutSavedComparisonByIdResponses, UpdateBenchmarkData, UpdateBenchmarkErrors, UpdateBenchmarkResponses, UpdateModelData, UpdateModelErrors, UpdateModelResponses, UpdateModelSuggestionData, UpdateModelSuggestionErrors, UpdateModelSuggestionResponses } from './types.gen.js';
+import type { CompareModelsData, CompareModelsErrors, CompareModelsResponses, CreateBenchmarkData, CreateBenchmarkErrors, CreateBenchmarkResponses, CreateModelData, CreateModelErrors, CreateModelResponses, CreateModelSuggestionData, CreateModelSuggestionErrors, CreateModelSuggestionResponses, DeleteBenchmarkData, DeleteBenchmarkErrors, DeleteBenchmarkResponses, DeleteModelData, DeleteModelErrors, DeleteModelResponses, DeleteModelSuggestionData, DeleteModelSuggestionErrors, DeleteModelSuggestionResponses, DeleteSavedComparisonByIdData, DeleteSavedComparisonByIdErrors, DeleteSavedComparisonByIdResponses, GetBenchmarkByIdData, GetBenchmarkByIdErrors, GetBenchmarkByIdResponses, GetCurrentUserData, GetCurrentUserErrors, GetCurrentUserResponses, GetHealthData, GetHealthResponses, GetLabsData, GetLabsResponses, GetModelBySlugData, GetModelBySlugErrors, GetModelBySlugResponses, GetModelSuggestionData, GetModelSuggestionErrors, GetModelSuggestionResponses, GetSavedComparisonByIdData, GetSavedComparisonByIdErrors, GetSavedComparisonByIdResponses, GetSavedComparisonData, GetSavedComparisonErrors, GetSavedComparisonResponses, ListBenchmarksData, ListBenchmarksResponses, ListModelsData, ListModelsErrors, ListModelsResponses, ListModelSuggestionsData, ListModelSuggestionsResponses, PostSavedComparisonData, PostSavedComparisonErrors, PostSavedComparisonResponses, PutSavedComparisonByIdData, PutSavedComparisonByIdErrors, PutSavedComparisonByIdResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, UpdateBenchmarkData, UpdateBenchmarkErrors, UpdateBenchmarkResponses, UpdateModelData, UpdateModelErrors, UpdateModelResponses, UpdateModelSuggestionData, UpdateModelSuggestionErrors, UpdateModelSuggestionResponses } from './types.gen.js';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -187,4 +187,29 @@ export const updateBenchmark = <ThrowOnError extends boolean = false>(options: O
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Create an account and start a session
+ */
+export const registerUser = <ThrowOnError extends boolean = false>(options: Options<RegisterUserData, ThrowOnError>): RequestResult<RegisterUserResponses, RegisterUserErrors, ThrowOnError> => (options.client ?? client).post<RegisterUserResponses, RegisterUserErrors, ThrowOnError>({
+    url: '/api/auth/register',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get the authenticated user
+ */
+export const getCurrentUser = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentUserData, ThrowOnError>): RequestResult<GetCurrentUserResponses, GetCurrentUserErrors, ThrowOnError> => (options?.client ?? client).get<GetCurrentUserResponses, GetCurrentUserErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'aimc_session',
+            type: 'apiKey'
+        }],
+    url: '/api/auth/me',
+    ...options
 });

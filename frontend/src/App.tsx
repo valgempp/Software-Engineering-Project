@@ -1,3 +1,5 @@
+import PrivacyPage from './pages/PrivacyPage';
+import RegisterPage from './pages/RegisterPage';
 import RankingPage from './pages/RankingPage';
 import { Route, Routes } from 'react-router';
 import Layout from './components/Layout';
@@ -14,6 +16,8 @@ export default function App() {
         <Route path="ranking" element={<RankingPage />} />
         <Route path="models" element={<ModelsPage />} />
         <Route path="models/:slug" element={<ModelPage />} />
+        <Route path="privacy" element={<PrivacyPage />} />
+        <Route path="register" element={<RegisterPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

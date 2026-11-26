@@ -66,6 +66,23 @@ export type BenchmarkUpdateInput = {
     source?: string;
 };
 
+export type RegistrationInput = {
+    email: string;
+    username: string;
+    /**
+     * Maximum 72 UTF-8 bytes
+     */
+    password: string;
+    privacyAccepted: true;
+};
+
+export type RegisteredUser = {
+    id: number;
+    email: string;
+    username: string;
+    active: boolean;
+};
+
 export type GetHealthData = {
     body?: never;
     path?: never;
@@ -776,3 +793,57 @@ export type UpdateBenchmarkResponses = {
 };
 
 export type UpdateBenchmarkResponse = UpdateBenchmarkResponses[keyof UpdateBenchmarkResponses];
+
+export type RegisterUserData = {
+    body: RegistrationInput;
+    path?: never;
+    query?: never;
+    url: '/api/auth/register';
+};
+
+export type RegisterUserErrors = {
+    /**
+     * Invalid registration data
+     */
+    400: Error;
+    /**
+     * Email or username already exists
+     */
+    409: Error;
+};
+
+export type RegisterUserError = RegisterUserErrors[keyof RegisterUserErrors];
+
+export type RegisterUserResponses = {
+    /**
+     * Account created
+     */
+    201: RegisteredUser;
+};
+
+export type RegisterUserResponse = RegisterUserResponses[keyof RegisterUserResponses];
+
+export type GetCurrentUserData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/me';
+};
+
+export type GetCurrentUserErrors = {
+    /**
+     * Not authenticated
+     */
+    401: Error;
+};
+
+export type GetCurrentUserError = GetCurrentUserErrors[keyof GetCurrentUserErrors];
+
+export type GetCurrentUserResponses = {
+    /**
+     * Authenticated user
+     */
+    200: RegisteredUser;
+};
+
+export type GetCurrentUserResponse = GetCurrentUserResponses[keyof GetCurrentUserResponses];
